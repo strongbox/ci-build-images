@@ -1,0 +1,23 @@
+FROM debian:10-slim
+
+ENV USER_ID=1000
+ENV GROUP_ID=1000
+ENV HOME /home/jenkins
+
+ENV BASE_TOOLS bash bc ca-certificates curl coreutils file grep gnupg jq mc openssh-client procps p7zip-full sed tar unzip wget xz-utils
+ENV VCS_TOOLS git mercurial
+
+COPY common-scripts /scripts
+
+RUN set -ex \
+ && apt-get -q update \
+ && apt-get install --no-install-recommends -y -q $BASE_TOOLS $VCS_TOOLS \
+ && /bin/bash /scripts/setup-user.sh \
+ && apt-get clean \
+ && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/ /scripts
+
+WORKDIR $HOME
+
+USER jenkins
+
+CMD echo "" && cat /etc/os-release && echo "" && /bin/bash

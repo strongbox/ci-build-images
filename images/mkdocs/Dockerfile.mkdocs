@@ -1,0 +1,8 @@
+FROM squidfunk/mkdocs-material:4.4.2
+
+# We are using this only for generating the documentations.
+RUN set -e -x \
+ && echo "http://dl-cdn.alpinelinux.org/alpine/v3.8/community/" >> /etc/apk/repositories \
+ && apk add --no-cache --upgrade openjdk8-jre curl ca-certificates git git-subtree bash \
+ && echo "Installing additional mkdocs plugins..." > /dev/null \
+ && pip install mkdocs-markdownextradata-plugin mkdocs-git-revision-date-plugin pymdown-extensions mdx_gh_links

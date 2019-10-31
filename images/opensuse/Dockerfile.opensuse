@@ -1,0 +1,25 @@
+FROM opensuse/leap:15
+
+ENV USER_ID=1000
+ENV GROUP_ID=1000
+# THIS MUST HAPPEN HERE OR ZYPPER SHOWS INSANE ERRORS!
+ENV HOME /home/jenkins
+
+ENV BASE_TOOLS bash bc curl coreutils file gzip grep gnupg mc openssh procps p7zip sed tar unzip wget xz jq
+ENV VCS_TOOLS git mercurial
+
+COPY common-scripts /scripts
+
+RUN set -ex \
+ && (HOME=/root zypper --non-interactive refresh) \
+ && (HOME=/root zypper --non-interactive --no-gpg-checks install --no-recommends -y \
+    $BASE_TOOLS $VCS_TOOLS) \
+ && /bin/bash /scripts/setup-user.sh \
+ && zypper clean -a \
+ && rm -rf /tmp/* /var/tmp/* /scripts
+
+WORKDIR $HOME
+
+USER jenkins
+
+CMD echo "" && cat /etc/os-release && echo "" && /bin/bash

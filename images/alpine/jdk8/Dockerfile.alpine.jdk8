@@ -1,0 +1,35 @@
+ARG SNAPSHOT=""
+FROM strongboxci/alpine:base$SNAPSHOT
+
+ENV JDK_VERSION=8 \
+    JDK_UPDATE=232 \
+    JDK_BUILD=09 \
+    JDK_CHECKSUM=6503e2d3323818dbfac6b5dbe869a0cb4113b6d2d9a9f249c169c8bb06fd55e3 \
+    GLIBC_VERSION=2.30-r0
+
+ENV JDK_NAME="jdk-${JDK_VERSION}u${JDK_UPDATE}" \
+    JDK_DW_PATH="jdk${JDK_VERSION}u${JDK_UPDATE}-b${JDK_BUILD}" \
+    JDK_DW_FILENAME="jdk-${JDK_VERSION}u${JDK_UPDATE}-ojdkbuild-linux-x64.zip"
+ENV JDK_DW_DIR_NAME="${JDK_NAME}-ojdkbuild-linux-x64" \
+    JDK_DIR_NAME="${JDK_NAME}-b${JDK_BUILD}" \
+    JDK_DW_URL="https://github.com/ojdkbuild/contrib_jdk8u-ci/releases/download/${JDK_DW_PATH}/${JDK_DW_FILENAME}"
+
+ENV JAVA_HOME="/java/${JDK_DIR_NAME}"
+ENV PATH="${JAVA_HOME}/bin:${PATH}"
+
+ADD https://alpine-pkgs.sgerrand.com/sgerrand.rsa.pub /etc/apk/keys/sgerrand.rsa.pub
+ADD https://github.com/sgerrand/alpine-pkg-glibc/releases/download/$GLIBC_VERSION/glibc-$GLIBC_VERSION.apk /tmp/glibc-$GLIBC_VERSION.apk
+ADD https://github.com/sgerrand/alpine-pkg-glibc/releases/download/$GLIBC_VERSION/glibc-bin-$GLIBC_VERSION.apk /tmp/glibc-bin-$GLIBC_VERSION.apk
+
+COPY common-scripts /scripts
+
+USER root
+
+RUN set -x \
+ && apk add --no-cache /tmp/glibc-$GLIBC_VERSION.apk /tmp/glibc-bin-$GLIBC_VERSION.apk \
+ && /scripts/setup-jdk.sh \
+ && rm -rf /tmp/* /scripts
+
+USER jenkins
+
+CMD echo "" && java -version && echo "" && /bin/bash

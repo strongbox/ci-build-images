@@ -1,0 +1,28 @@
+FROM centos:8
+
+ENV USER_ID=1000
+ENV GROUP_ID=1000
+ENV HOME /home/jenkins
+
+ENV BASE_TOOLS bash bc curl coreutils-single file grep gnupg mc openssh-clients procps sed p7zip p7zip-plugins tar unzip wget xz jq
+ENV VCS_TOOLS git mercurial
+
+COPY common-scripts /scripts
+
+USER root
+
+RUN set -x \
+ && yum -y update \
+ # epel is necessary for p7zip
+ && yum -y install epel-release \
+ && yum -y install  $BASE_TOOLS $VCS_TOOLS \
+ && 7z -h \
+ && /bin/bash /scripts/setup-user.sh \
+ && yum clean all \
+ && rm -rf /tmp/* /var/tmp/* /scripts
+
+WORKDIR $HOME
+
+USER jenkins
+
+CMD echo "" && cat /etc/os-release && echo "" && /bin/bash

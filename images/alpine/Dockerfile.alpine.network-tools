@@ -1,0 +1,11 @@
+ARG SNAPSHOT=""
+FROM strongboxci/alpine:base$SNAPSHOT
+
+USER root
+
+RUN set -x \
+ && apk --no-cache add bash bind-tools net-tools curl
+
+USER jenkins
+
+CMD echo 'Interfaces: ' && ip a | grep -i 'scope global' && echo '' && echo 'DNS: ' && cat /etc/resolv.conf | grep -v "#" && echo '' && /bin/bash

@@ -1,0 +1,47 @@
+FROM alpine:3.10
+
+ENV USER_ID=1000
+ENV GROUP_ID=1000
+ENV HOME /home/jenkins
+
+#################################
+## Details regarding packages: ##
+#################################
+##
+## dpkg/rpm packages are necessaryfor strongbox-distribution builds to work.
+##
+## p7zip is necessary to unzip jdk-8u202-ojdkbuild-linux-x64 jdk-8u202-ojdkbuild-linux-x64, because apparently
+## unzip is unable to create symbolic links:
+##    finishing deferred symbolic links:
+##      jdk-8u202-ojdkbuild-linux-x64/man/ja -> ja_JP.UTF-8
+##     lchmod (file attributes) error: Not supported
+##        jdk-8u202-ojdkbuild-linux-x64/jre/lib/amd64/server/libjsig.so -> ../libjsig.so
+##     lchmod (file attributes) error: Not supported
+##
+## libstdc++ is necessary because some java tools don't work if it's missing.
+##
+
+ENV BASE_TOOLS bash bc ca-certificates curl coreutils file grep gnupg mc openssh-client openssh-keygen procps p7zip sed tar unzip wget xz jq
+ENV VCS_TOOLS git mercurial
+ENV BUILD_DEPS dpkg dpkg-dev rpm rpm-dev
+ENV OTHER_DEPS libstdc++
+
+COPY common-scripts /scripts
+
+USER root
+
+RUN set -x \
+ && apk add --no-cache $BASE_TOOLS $VCS_TOOLS $BUILD_DEPS $OTHER_TOOLS \
+ && apk add --no-cache --virtual build-dependencies shadow \
+ && /bin/bash /scripts/setup-user.sh \
+ && apk del build-dependencies \
+ && mkdir -p /var/lib/rpm /var/tmp \
+ && chown -R ${USER_ID}.${GROUP_ID} /var/lib/rpm /var/tmp \
+ && chmod -R 755 /var/lib/rpm /var/tmp \
+ && rm -rf /tmp/* /scripts
+
+WORKDIR /home/jenkins
+
+USER jenkins
+
+CMD echo "" && cat /etc/os-release && echo "" && /bin/bash

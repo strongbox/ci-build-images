@@ -1,0 +1,29 @@
+ARG SNAPSHOT=""
+FROM strongboxci/ubuntu:base$SNAPSHOT
+
+ENV JDK_VERSION=11 \
+    JDK_UPDATE=0.5 \
+    JDK_BUILD=10 \
+    JDK_CHECKSUM=be820e816a4a1e178c2461f1ec22be20fbbf83cd656408a77cc78d9a81ede6bc
+
+ENV JDK_NAME="jdk-${JDK_VERSION}.${JDK_UPDATE}" \
+    JDK_DW_PATH="jdk-${JDK_VERSION}.${JDK_UPDATE}+${JDK_BUILD}" \
+    JDK_DW_FILENAME="jdk-${JDK_VERSION}.${JDK_UPDATE}-ojdkbuild-linux-x64.zip"
+ENV JDK_DW_DIR_NAME="${JDK_NAME}-ojdkbuild-linux-x64" \
+    JDK_DIR_NAME="${JDK_NAME}-b${JDK_BUILD}" \
+    JDK_DW_URL="https://github.com/ojdkbuild/contrib_jdk11u-ci/releases/download/${JDK_DW_PATH}/${JDK_DW_FILENAME}"
+
+ENV JAVA_HOME="/java/${JDK_DIR_NAME}"
+ENV PATH $JAVA_HOME/bin:$PATH
+
+COPY common-scripts /scripts
+
+USER root
+
+RUN set -x \
+ && /scripts/setup-jdk.sh \
+ && rm -rf /tmp/* /scripts
+
+USER jenkins
+
+CMD echo "" && java -version && echo "" && /bin/bash

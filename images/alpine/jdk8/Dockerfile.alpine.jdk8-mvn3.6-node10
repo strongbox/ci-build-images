@@ -1,0 +1,34 @@
+# https://github.com/nodejs/docker-node/blob/f8c22aeb318ec3df876f8271b9b8a86005f0f53d/10/alpine/Dockerfile
+ARG SNAPSHOT=""
+FROM strongboxci/alpine:jdk8-mvn3.6$SNAPSHOT
+
+COPY --from=node:10.15.0-alpine /usr/local /usr/local
+COPY --from=node:10.15.0-alpine /opt /opt
+
+ENV NODE_VERSION 10.15.0
+ENV YARN_VERSION 1.12.3
+
+USER root
+
+RUN set -x \
+ && mkdir -p $HOME/.config \
+ && chown -R $USER_ID.$GROUP_ID $HOME/.config \
+ && apk add --no-cache libstdc++ \
+ && (set -o errexit -o nounset; echo "Testing mvn installation" > /dev/null; mvn -version) \
+ && (set -o errexit -o nounset; echo "Testing node installation" > /dev/null; node --version) \
+ && (set -o errexit -o nounset; echo "Testing npm installation" > /dev/null; npm --version) \
+ && (set -o errexit -o nounset; echo "Testing yarn installation" > /dev/null; yarn --version) \
+ && rm -rf /tmp/*
+
+WORKDIR $HOME
+
+USER jenkins
+
+CMD info() { MSG=$1; TOOL=$2; VERSION=$($TOOL --version); echo "$MSG $VERSION"; } \
+ && echo "" \
+ && info "Node version: " "node" \
+ && info "Npm version:  " "npm" \
+ && info "Yarn version: " "yarn" \
+ && mvn -version \
+ && echo "" \
+ && /bin/bash
