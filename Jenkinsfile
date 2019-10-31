@@ -126,7 +126,7 @@ def distributionBuildStages(DISTRIBUTION, BRANCH_NAME, DEPLOY, SNAPSHOT) {
                         container("docker") {
                             script {
                                 echo "Images to push: " + IMAGES.toString()
-                                withDockerRegistry([credentialsId: '6fedbf52-4df3-4328-90d6-0caf08edb68d', url: "https://index.docker.io/v1/"]) {
+                                withDockerRegistry([credentialsId: '5b811a23-b4cf-4f4c-b944-2ef6a88e80a3', url: "https://index.docker.io/v1/"]) {
                                     def attempt = 0
                                     retry(5) {
                                         // wait for a moment, might be a temporary network issue?
