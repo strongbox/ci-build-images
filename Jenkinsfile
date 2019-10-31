@@ -5,7 +5,7 @@ import org.jenkinsci.plugins.workflow.steps.FlowInterruptedException
 
 def DEPLOY = params.getOrDefault("DEPLOY", false)
 // tag as SNAPSHOT if not `master` or is `pr`
-def SNAPSHOT =  DEPLOY ? true : (env.CHANGE_ID || env.BRANCH_NAME != 'master');
+def SNAPSHOT = DEPLOY && env.BRANCH_NAME != 'master';
 def TIMESTAMP = (new Date()).format("yyyyddMMHHmmss")
 def APPROVED = false
 
