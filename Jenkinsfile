@@ -43,13 +43,17 @@ pipeline {
                         else
                         {
                             timeout(time: 30, unit: "MINUTES") {
-                                input(
+                                DEPLOY = input(
                                     message: 'Approve this build? (please notify us in the #community channel to approve)',
-                                    submitter: 'administrators,strongbox-core,strongbox-pro,strongbox-oss'
+                                    submitter: 'administrators,strongbox-core,strongbox-pro,strongbox-oss',
+                                    parameters: [
+                                        booleanParam(defaultValue: false, description: 'Should we also deploy?', name: 'DEPLOY')
+                                    ]
                                 )
                                 // retardness - if you "abort" the input, it will throw an exception,
                                 // however if you "approve" it returns "null"!? This "fixes" it.
                                 APPROVED = true
+                                SNAPSHOT = true
                             }
                         }
                     }
@@ -57,6 +61,7 @@ pipeline {
                     {
                         println "Skipping build"
                         APPROVED = false
+                        SNAPSHOT = false
                         currentBuild.result = "NOT_BUILT"
                     }
                 }
@@ -72,6 +77,7 @@ pipeline {
                     buildStages.put("alpine", distributionBuildStages("alpine", BRANCH_NAME, DEPLOY, SNAPSHOT))
                     buildStages.put("debian", distributionBuildStages("debian", BRANCH_NAME, DEPLOY, SNAPSHOT))
                     buildStages.put("centos", distributionBuildStages("centos", BRANCH_NAME, DEPLOY, SNAPSHOT))
+                    buildStages.put("mkdocs", distributionBuildStages("mkdocs", BRANCH_NAME, DEPLOY, SNAPSHOT, false))
                     buildStages.put("opensuse", distributionBuildStages("opensuse", BRANCH_NAME, DEPLOY, SNAPSHOT))
                     buildStages.put("ubuntu", distributionBuildStages("ubuntu", BRANCH_NAME, DEPLOY, SNAPSHOT))
                     parallel buildStages
@@ -81,7 +87,7 @@ pipeline {
     }
 }
 
-def distributionBuildStages(DISTRIBUTION, BRANCH_NAME, DEPLOY, SNAPSHOT) {
+def distributionBuildStages(DISTRIBUTION, BRANCH_NAME, DEPLOY, SNAPSHOT, BUILD_JDKS = true) {
     return {
         node('alpine-docker')
         {
@@ -102,19 +108,22 @@ def distributionBuildStages(DISTRIBUTION, BRANCH_NAME, DEPLOY, SNAPSHOT) {
                             }
                         }
                     }
-                    stage('jdk8') {
-                        container("docker") {
-                            script {
-                                def built = processDockerfiles(findDockerfiles((String) "./images/$DISTRIBUTION/jdk8"), SNAPSHOT);
-                                IMAGES = IMAGES + built
+                    if(BUILD_JDKS)
+                    {
+                        stage('jdk8') {
+                            container("docker") {
+                                script {
+                                    def built = processDockerfiles(findDockerfiles((String) "./images/$DISTRIBUTION/jdk8"), SNAPSHOT);
+                                    IMAGES = IMAGES + built
+                                }
                             }
                         }
-                    }
-                    stage('jdk11') {
-                        container("docker") {
-                            script {
-                                def built = processDockerfiles(findDockerfiles((String) "./images/$DISTRIBUTION/jdk11"), SNAPSHOT);
-                                IMAGES = IMAGES + built
+                        stage('jdk11') {
+                            container("docker") {
+                                script {
+                                    def built = processDockerfiles(findDockerfiles((String) "./images/$DISTRIBUTION/jdk11"), SNAPSHOT);
+                                    IMAGES = IMAGES + built
+                                }
                             }
                         }
                     }
