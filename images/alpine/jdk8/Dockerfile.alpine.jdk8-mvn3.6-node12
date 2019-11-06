@@ -1,12 +1,12 @@
 # https://github.com/nodejs/docker-node/blob/f8c22aeb318ec3df876f8271b9b8a86005f0f53d/10/alpine/Dockerfile
 ARG SNAPSHOT=""
-FROM strongboxci/alpine:jdk11-mvn3.6$SNAPSHOT
+FROM strongboxci/alpine:jdk8-mvn3.6$SNAPSHOT
 
-COPY --from=node:10.15.0-alpine /usr/local /usr/local
-COPY --from=node:10.15.0-alpine /opt /opt
+ENV NODE_VERSION 12.13.0
+ENV YARN_VERSION 1.19.1
 
-ENV NODE_VERSION 10.15.0
-ENV YARN_VERSION 1.12.3
+COPY --from=node:12.13.0-alpine /usr/local /usr/local
+COPY --from=node:12.13.0-alpine /opt /opt
 
 USER root
 
