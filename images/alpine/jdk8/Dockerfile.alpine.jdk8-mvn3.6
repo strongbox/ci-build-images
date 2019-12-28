@@ -2,7 +2,7 @@ ARG SNAPSHOT=""
 FROM strongboxci/alpine:jdk8$SNAPSHOT
 
 ENV MVN_MAJOR_VERSION=3
-ENV MVN_VERSION=3.6.2
+ENV MVN_VERSION=3.6.3
 ENV M2_HOME="/java/mvn-${MVN_VERSION}"
 
 COPY common-scripts /scripts

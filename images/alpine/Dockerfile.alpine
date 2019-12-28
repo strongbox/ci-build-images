@@ -22,7 +22,7 @@ ENV HOME /home/jenkins
 ##
 
 ENV BASE_TOOLS bash bc ca-certificates curl coreutils file grep gnupg mc openssh-client openssh-keygen procps p7zip sed tar unzip wget xz jq
-ENV VCS_TOOLS git mercurial
+ENV VCS_TOOLS git
 ENV BUILD_DEPS dpkg dpkg-dev rpm rpm-dev
 ENV OTHER_DEPS libstdc++
 
