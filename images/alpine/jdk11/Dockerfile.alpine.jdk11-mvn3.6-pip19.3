@@ -20,7 +20,7 @@ RUN set -ex; \
     mkdir -p $HOME/.cache/pip; \
     chown -R $USER_ID.$GROUP_ID $HOME; \
     chmod -R 755 $HOME; \
-    curl -o get-pip.py "$PYTHON_GET_PIP_URL"; \
+    curl -L -o get-pip.py "$PYTHON_GET_PIP_URL"; \
     echo "$PYTHON_GET_PIP_SHA256 *get-pip.py" | sha256sum -c -; \
     \
     python get-pip.py \
