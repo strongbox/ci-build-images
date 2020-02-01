@@ -11,7 +11,9 @@ ln -s ${JAVA_HOME} /java/jdk
 
 # Downloading & Installing
 cd ${JAVA_HOME}
-curl --fail -O -J -L "${JDK_DW_URL}"
+# https://ec.haxx.se/usingcurl/usingcurl-timeouts
+# speed-limit is in bytes.
+curl --fail --speed-time 15 --speed-limit 1024000 -O -J -L "${JDK_DW_URL}"
 echo "${JDK_CHECKSUM} ${JDK_DW_FILENAME}" | sha256sum -c -
 7z l ${JDK_DW_FILENAME}
 7z x -y -snl ${JDK_DW_FILENAME}

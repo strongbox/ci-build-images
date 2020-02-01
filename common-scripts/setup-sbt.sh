@@ -6,7 +6,9 @@ echo "Make dirs and fix permissions"
 mkdir -p $SBT_HOME/.sbt $HOME/.sbt $HOME/.ivy2 $HOME/.cache
 chown -R $USER_ID.$GROUP_ID $SBT_HOME/.sbt $HOME/.sbt $HOME
 echo "Downloading https://github.com/sbt/sbt/releases/download/v$SBT_VERSION/sbt-$SBT_VERSION.tgz" > /dev/null
-curl -L -C - "https://github.com/sbt/sbt/releases/download/v$SBT_VERSION/sbt-$SBT_VERSION.tgz" | tar -xz --strip-components 1 -C ${SBT_HOME}
+# https://ec.haxx.se/usingcurl/usingcurl-timeouts
+# speed-limit is in bytes.
+curl --fail --speed-time 15 --speed-limit 1024000 -L -C - "https://github.com/sbt/sbt/releases/download/v$SBT_VERSION/sbt-$SBT_VERSION.tgz" | tar -xz --strip-components 1 -C ${SBT_HOME}
 ln -s $SBT_HOME/bin/* /usr/bin/
 
 # This is a special patch, which fixes some mysterious issue with SBT's bash script which is unable
