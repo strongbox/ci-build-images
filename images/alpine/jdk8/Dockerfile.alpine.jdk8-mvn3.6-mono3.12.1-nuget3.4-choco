@@ -1,0 +1,22 @@
+FROM mono:3.12.1 as builder
+
+ENV CHOCO_VERSION=9bb4246354188e4205b5dbcae6f8638351eccb13
+
+COPY common-scripts /scripts
+
+USER root
+
+RUN set -ex \ 
+ && echo "Building chocolatey..." \
+ && /bin/bash /scripts/setup-choco.sh build
+
+RUN set -ex \
+ && echo "Setting up chocolatey..." \
+ && /bin/bash /scripts/setup-choco.sh setupScript 
+
+ARG SNAPSHOT=""
+FROM strongboxci/alpine:jdk8-mvn3.6-mono5-nuget3.4$SNAPSHOT
+
+USER jenkins
+
+CMD echo "" && mono --version && echo "" && choco --version && echo "" && mvn --version && echo "" && /bin/bash
