@@ -25,4 +25,4 @@ RUN set -ex \
 
 USER jenkins
 
-CMD echo "" && mono --version && echo "" && choco --version && echo "" && mvn --version && echo "" && /bin/bash
+CMD echo "" && mono --version && echo "" && echo -n "Choco: " && choco --version && echo "" && mvn --version && echo "" && /bin/bash
