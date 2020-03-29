@@ -95,8 +95,8 @@ usage() {
     -h |--help          Prints this help message.
     -c |--clear         Clears all temp/log files from the repository.
     -nc|--no-cache      Adds --no-cache to the docker build command
-    -s |--snapshot      Tag the images as snapshots (i.e. strongboxci/alpine:base-TIMESTAMP)
-    -gi|--get-image     Prints the full image and tag (i.e. strongboxci/alpine:base-TIMESTAMP||PR-123-TIMESTAMP||BRANCH-TIMESTAMP; needed for CI)
+    -s |--snapshot      Tag the images as snapshots (i.e. strongboxci/alpine:base-TIMESTAMP||PR-123||BRANCH)
+    -gi|--get-image     Prints the full image and tag (i.e. strongboxci/alpine:base-TIMESTAMP||PR-123||BRANCH; needed for CI)
 
 EOF
     exit 0
@@ -121,9 +121,9 @@ while [[ $# -gt 0 ]]; do
         -s|--snapshot)
             # Jenkins PR/Branch env
             if [[ ! -z "$CHANGE_ID" ]]; then
-              TAG_SNAPSHOT="PR-$CHANGE_ID-$TIMESTAMP"
+              TAG_SNAPSHOT="PR-$CHANGE_ID"
             elif [[ ! -z "$BRANCH_NAME" ]]; then
-              TAG_SNAPSHOT="$BRANCH_NAME-$TIMESTAMP"
+              TAG_SNAPSHOT="$BRANCH_NAME"
             else
               TAG_SNAPSHOT="$TIMESTAMP"
             fi
