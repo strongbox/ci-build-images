@@ -28,16 +28,16 @@ function setupScript
 	cp -r choco/build_output/chocolatey/ /opt/chocolatey
 
 	echo $'\n
-	#!/bin/bash \n
-	set -e \n
-	function cleanup { \n
-	    if [ $PWD != "/" ] && [ -d opt ]; then \n
-	        rm -rf opt \n
-	    fi \n
-	} \n
-	trap cleanup EXIT \n
-	mono /opt/chocolatey/choco.exe "$@" --allow-unofficial \n
-	'  > /usr/bin/choco 
+#!/bin/bash \n
+set -e \n
+function cleanup { \n
+    if [ $PWD != "/" ] && [ -d opt ]; then \n
+        rm -rf opt \n
+    fi \n
+} \n
+trap cleanup EXIT \n
+mono /opt/chocolatey/choco.exe "$@" --allow-unofficial \n
+'  > /usr/bin/choco 
 
 	chmod +x /usr/bin/choco
 	mkdir -p /opt/chocolatey/lib
