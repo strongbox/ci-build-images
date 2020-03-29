@@ -4,18 +4,24 @@ ENV CHOCO_VERSION=9bb4246354188e4205b5dbcae6f8638351eccb13
 
 COPY common-scripts /scripts
 
-USER root
-
-RUN set -ex \ 
+RUN set -ex \
  && echo "Building chocolatey..." \
  && /bin/bash /scripts/setup-choco.sh build
 
-RUN set -ex \
- && echo "Setting up chocolatey..." \
- && /bin/bash /scripts/setup-choco.sh setupScript 
-
 ARG SNAPSHOT=""
 FROM strongboxci/alpine:jdk8-mvn3.6-mono5-nuget3.4$SNAPSHOT
+
+ENV ChocolateyInstall=/opt/chocolatey
+
+COPY common-scripts /scripts
+COPY --from=builder /usr/src/choco/build_output/chocolatey $ChocolateyInstall
+
+USER root
+
+RUN set -ex \
+ && echo "Setting up chocolatey..." \
+ && /bin/bash /scripts/setup-choco.sh setupScript \
+ && rm -rf /tmp/* /scripts
 
 USER jenkins
 

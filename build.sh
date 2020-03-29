@@ -74,6 +74,9 @@ build() {
   }
 
   echo ""
+  echo "To test the image use: "
+  echo "docker run -it --rm $IMAGE"
+  echo ""
 
   echo "success: $IMAGE" >> $MAIN_BUILD_LOG
 }
