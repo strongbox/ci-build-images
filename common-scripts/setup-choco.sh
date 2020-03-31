@@ -36,9 +36,9 @@ function setupScript
 
     # https://chocolatey.org/docs/chocolatey-faqs#portable-application-something-that-doesnt-require-a-system-install-to-use
     # helpers, redirects, lib and tools are directories which need to be existing and writable for choco to work properly.
-    mkdir -p $ChocolateyInstall/{helpers,redirects,lib,tools,config}
-    chmod -R 750 $ChocolateyInstall/{helpers,redirects,lib,tools,config}
-    chown -R $USER_ID.$GROUP_ID $ChocolateyInstall/{helpers,redirects,lib,tools,config}
+    mkdir -p $ChocolateyInstall/{helpers,redirects,lib,tools,config,.chocolatey,logs}
+    chmod -R 777 $ChocolateyInstall/{helpers,redirects,lib,tools,config,.chocolatey,logs}
+    chown -R $USER_ID.$GROUP_ID $ChocolateyInstall
 
     cat <<'EOF' >/usr/bin/choco
 #!/bin/bash
