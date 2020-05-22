@@ -17,6 +17,9 @@ ENV JDK_DW_DIR_NAME="${JDK_NAME}-ojdkbuild-linux-x64" \
 ENV JAVA_HOME="/java/${JDK_DIR_NAME}"
 ENV PATH $JAVA_HOME/bin:$PATH
 
+ENV JMETER_VERSION=5.3 \
+    JMETER_CHECKSUM=922195b901358c2bf0d454e4b19fa2b45f072f0e0327b06c229935c2de0b785b641e7a58ceaa4682cf3643aeed4915256ae003b487b0c9a2144bb33c2b12e28e
+
 ADD https://alpine-pkgs.sgerrand.com/sgerrand.rsa.pub /etc/apk/keys/sgerrand.rsa.pub
 ADD https://github.com/sgerrand/alpine-pkg-glibc/releases/download/$GLIBC_VERSION/glibc-$GLIBC_VERSION.apk /tmp/glibc-$GLIBC_VERSION.apk
 ADD https://github.com/sgerrand/alpine-pkg-glibc/releases/download/$GLIBC_VERSION/glibc-bin-$GLIBC_VERSION.apk /tmp/glibc-bin-$GLIBC_VERSION.apk
