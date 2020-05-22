@@ -13,7 +13,7 @@ ln -s ${JAVA_HOME} /java/jdk
 cd ${JAVA_HOME}
 # https://ec.haxx.se/usingcurl/usingcurl-timeouts
 # speed-limit is in bytes.
-curl --fail --speed-time 15 --speed-limit 1024000 -O -J -L "${JDK_DW_URL}"
+curl --fail --speed-time 15 --speed-limit 1024000 -o $JDK_DW_FILENAME -J -L "${JDK_DW_URL}"
 echo "${JDK_CHECKSUM} ${JDK_DW_FILENAME}" | sha256sum -c -
 7z l ${JDK_DW_FILENAME}
 7z x -y -snl ${JDK_DW_FILENAME}
@@ -22,9 +22,10 @@ echo "${JDK_CHECKSUM} ${JDK_DW_FILENAME}" | sha256sum -c -
 mv ${JAVA_HOME}/${JDK_DW_DIR_NAME}/* ${JAVA_HOME}
 ls -al ${JAVA_HOME}/
 ls -al ${JAVA_HOME}/bin/*
-rm -rf ${JAVA_HOME:?}/${JDK_DW_DIR_NAME}*
-rm -rfv "$JAVA_HOME/"*src.zip
-rm -rfv "$JAVA_HOME/lib/missioncontrol" \
+rm -rfv "$JAVA_HOME/$JDK_DW_DIR_NAME"* \
+        "$JAVA_HOME/man" \
+        "$JAVA_HOME/"*src.zip \
+        "$JAVA_HOME/lib/missioncontrol" \
         "$JAVA_HOME/lib/visualvm" \
         "$JAVA_HOME/lib/"*javafx* \
         "$JAVA_HOME/jre/lib/plugin.jar" \
@@ -56,3 +57,14 @@ java -version
 
 echo "Testing javac installation..." > /dev/null;
 javac -version
+
+echo "Installing jmeter" > /dev/null
+cd /java
+curl --fail --speed-time 15 --speed-limit 1024000 -O -J -L "http://apache.cbox.biz/jmeter/binaries/apache-jmeter-${JMETER_VERSION}.tgz"
+echo "${JMETER_CHECKSUM} apache-jmeter-${JMETER_VERSION}.tgz" | sha512sum -c -
+tar zxf apache-jmeter-${JMETER_VERSION}.tgz
+ln -s /java/apache-jmeter-${JMETER_VERSION}/bin/{jmeter,jmeter-server} /usr/local/bin/
+rm -rfv "/java/apache-jmeter-${JMETER_VERSION}/"*docs*
+echo "Testing jmeter installation..." > /dev/null;
+jmeter --version
+rm -rf apache-jmeter-${JMETER_VERSION}.tgz
