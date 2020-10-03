@@ -137,10 +137,10 @@ def distributionBuildStages(DISTRIBUTION, BRANCH_NAME, DEPLOY, SNAPSHOT, BUILD_J
                                 echo "Images to push: " + IMAGES.toString()
                                 withDockerRegistry([credentialsId: '5b811a23-b4cf-4f4c-b944-2ef6a88e80a3', url: "https://index.docker.io/v1/"]) {
                                     def attempt = 0
-                                    retry(5) {
+                                    retry(20) {
                                         // wait for a moment, might be a temporary network issue?
                                         if(attempt > 0) {
-                                            sleep 15
+                                            sleep 30
                                         }
                                         attempt++;
                                         IMAGES.each {
@@ -178,10 +178,10 @@ def processDockerfiles(files, snapshot)
         if (match.find())
         {
             def attempt = 0
-            retry(3) {
+            retry(20) {
                 // wait for a moment, might be a temporary network issue?
                 if(attempt > 0) {
-                    sleep 15
+                    sleep 30
                 }
                 attempt++;
 
