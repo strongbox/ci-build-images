@@ -1,5 +1,5 @@
 ARG SNAPSHOT=""
-FROM strongboxci/ubuntu:jdk11-mvn3.6$SNAPSHOT
+FROM strongboxci/ubuntu:jdk8-mvn3.6$SNAPSHOT
 
 USER root
 
@@ -7,7 +7,7 @@ USER root
 RUN set -x \
  && apt-get -q update \
  && apt-get -y install gnupg2 sudo \
- && curl -sL https://deb.nodesource.com/setup_12.x | bash - \
+ && curl -sL https://deb.nodesource.com/setup_14.x | bash - \
  && wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | sudo apt-key add - \
  && echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list \
  && apt-get -q update \
