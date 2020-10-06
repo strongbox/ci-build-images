@@ -1,6 +1,6 @@
 # Pull Request Description
 
-This pull request closes #
+This pull request closes strongbox/strongbox#
 
 # Acceptance Test
 
