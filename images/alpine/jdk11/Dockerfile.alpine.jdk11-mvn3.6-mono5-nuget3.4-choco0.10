@@ -1,6 +1,6 @@
 FROM mono:5.20 as builder
 
-ENV CHOCO_VERSION=9bb4246354188e4205b5dbcae6f8638351eccb13
+ENV CHOCO_VERSION=773b1852d9de9ab628598a9b29fe7d0f9d04f668
 
 COPY common-scripts /scripts
 
