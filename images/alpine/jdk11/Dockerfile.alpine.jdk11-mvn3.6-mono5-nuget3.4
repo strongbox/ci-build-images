@@ -2,13 +2,13 @@ ARG SNAPSHOT=""
 FROM strongboxci/alpine:jdk11-mvn3.6-mono5$SNAPSHOT
 
 # setup-nuget.sh
-ENV NUGET_VERSION=5.7.0
+ENV NUGET_VERSION=3.4.4
 ENV NUGET_PATH=/usr/local/bin/nuget-${NUGET_VERSION}.exe
 
 # S-W-I-T expects these environment variables to be set.
-ENV NUGET_V5_VERSION=$NUGET_VERSION
-ENV NUGET_V5_PATH=$NUGET_PATH
-ENV NUGET_V5_EXEC="mono ${NUGET_PATH}"
+ENV NUGET_V3_VERSION=$NUGET_VERSION
+ENV NUGET_V3_PATH=$NUGET_PATH
+ENV NUGET_V3_EXEC="mono ${NUGET_PATH}"
 
 COPY common-scripts /scripts
 
