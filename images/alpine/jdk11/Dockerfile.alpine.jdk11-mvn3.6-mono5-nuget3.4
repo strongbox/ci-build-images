@@ -6,9 +6,9 @@ ENV NUGET_VERSION=3.4.4
 ENV NUGET_PATH=/usr/local/bin/nuget-${NUGET_VERSION}.exe
 
 # S-W-I-T expects these environment variables to be set.
-ENV NUGET_V3_VERSION=$NUGET_VERSION
-ENV NUGET_V3_PATH=$NUGET_PATH
-ENV NUGET_V3_EXEC="mono ${NUGET_PATH}"
+ENV NUGET_VERSION=$NUGET_VERSION
+ENV NUGET_PATH=$NUGET_PATH
+ENV NUGET_EXEC="mono ${NUGET_PATH}"
 
 COPY common-scripts /scripts
 
