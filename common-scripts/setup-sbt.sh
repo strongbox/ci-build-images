@@ -25,4 +25,4 @@ ln -s $SBT_HOME/bin/* /usr/bin/
 #    mkdir: cannot create directory ??????: No such file or directory
 #    /usr/bin/sbt: line 343: java: command not found
 #    /usr/bin/sbt: line 127: exec: java: not found
-sed -i 's/^declare java_cmd=java/declare java_cmd=\/java\/jdk\/bin\/java/' /java/sbt-1.3.7/bin/sbt
+sed -i 's/^declare java_cmd=java/declare java_cmd=\/java\/jdk\/bin\/java/' /java/sbt-$SBT_VERSION/bin/sbt 
