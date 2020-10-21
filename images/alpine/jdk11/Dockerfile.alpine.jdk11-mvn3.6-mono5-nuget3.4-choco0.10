@@ -1,6 +1,6 @@
 FROM mono:5.20 as builder
 
-ENV CHOCO_VERSION=9bb4246354188e4205b5dbcae6f8638351eccb13
+ENV CHOCO_VERSION=ec79e66b18ba3997a31f4c16546820f0ea5d7ef1
 
 COPY common-scripts /scripts
 
@@ -15,6 +15,8 @@ ENV ChocolateyInstall=/opt/chocolatey
 
 COPY common-scripts /scripts
 COPY --from=builder /usr/src/choco/build_output/chocolatey $ChocolateyInstall
+# see https://github.com/mono/mono/issues/12557
+COPY --from=builder /usr/lib/libmono-native.so /usr/lib/libmono-native.so
 
 USER root
 
