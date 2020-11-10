@@ -1,4 +1,4 @@
-FROM squidfunk/mkdocs-material:5.1.0
+FROM squidfunk/mkdocs-material:6.1.4
 
 # We are using this only for generating the documentations.
 RUN set -e -x \
