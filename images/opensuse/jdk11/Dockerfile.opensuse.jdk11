@@ -1,19 +1,10 @@
 ARG SNAPSHOT=""
 FROM strongboxci/opensuse:base$SNAPSHOT
 
-ENV JDK_VERSION=11 \
-    JDK_UPDATE=0.5 \
-    JDK_BUILD=10 \
-    JDK_CHECKSUM=be820e816a4a1e178c2461f1ec22be20fbbf83cd656408a77cc78d9a81ede6bc
+ENV JDK_VERSION_STRING=jdk-11.0.9.1+1 \
+    JDK_CHECKSUM=e388fd7f3f2503856d0b04fde6e151cbaa91a1df3bcebf1deddfc3729d677ca3
 
-ENV JDK_NAME="jdk-${JDK_VERSION}.${JDK_UPDATE}" \
-    JDK_DW_PATH="jdk-${JDK_VERSION}.${JDK_UPDATE}+${JDK_BUILD}" \
-    JDK_DW_FILENAME="jdk-${JDK_VERSION}.${JDK_UPDATE}-ojdkbuild-linux-x64.zip"
-ENV JDK_DW_DIR_NAME="${JDK_NAME}-ojdkbuild-linux-x64" \
-    JDK_DIR_NAME="${JDK_NAME}-b${JDK_BUILD}" \
-    JDK_DW_URL="https://github.com/ojdkbuild/contrib_jdk11u-ci/releases/download/${JDK_DW_PATH}/${JDK_DW_FILENAME}"
-
-ENV JAVA_HOME="/java/${JDK_DIR_NAME}"
+ENV JAVA_HOME="/java/${JDK_VERSION_STRING}"
 ENV PATH $JAVA_HOME/bin:$PATH
 
 ENV JMETER_VERSION=5.3 \
