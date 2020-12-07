@@ -24,7 +24,8 @@ COPY common-scripts /scripts
 USER root
 
 RUN set -ex \
- && /bin/bash /scripts/setup-jdk.sh \
+ && /scripts/setup-jdk.sh \
+ && /scripts/setup-jmeter.sh \
  && rm -rf /tmp/* /scripts
 
 USER jenkins

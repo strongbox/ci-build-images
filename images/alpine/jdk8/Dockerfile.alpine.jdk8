@@ -28,9 +28,10 @@ COPY common-scripts /scripts
 
 USER root
 
-RUN set -x \
+RUN set -ex \
  && apk add --no-cache /tmp/glibc-$GLIBC_VERSION.apk /tmp/glibc-bin-$GLIBC_VERSION.apk \
  && /scripts/setup-jdk.sh \
+ && /scripts/setup-jmeter.sh \
  && rm -rf /tmp/* /scripts
 
 USER jenkins
