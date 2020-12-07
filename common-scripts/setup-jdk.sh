@@ -1,29 +1,114 @@
 #!/bin/bash
 
+# Simply copy the the version from https://adoptopenjdk.net/releases.html?variant=openjdk8&jvmVariant=hotspot
+# i.e. jdk8u275-b01 || jdk-11.0.9.1+1 || etc
+JDK_VERSION_STRING=${JDK_VERSION_STRING:-""}
+# i.e. /java/jdk8u275-b01 || /java/jdk-11.0.9.1+1 || etc
+JAVA_HOME=${JAVA_HOME:-""}
+# available at https://adoptopenjdk.net/releases.html?variant=openjdk8&jvmVariant=hotspot
+JDK_CHECKSUM=${JDK_CHECKSUM:-""}
+
+JDK_OS=${JDK_OS:-"linux"}
+JDK_ARCH=${JDK_ARCH:-"x64"}
+JDK_JVM=${JDK_JVM:-"hotspot"}
+
+JDK_VERSION=""
+JDK_MAJOR_VERSION=""
+JDK_DW_URL=""
+JDK_DW_FILENAME=""
+JDK_PATH_VERSION="jdk"
+PARSE_ONLY="false"
+
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    --home)        JAVA_HOME=$2; shift 2; ;;
+    -a|--arch)     JDK_ARCH=$2; shift 2; ;;
+    -c|--checksum) JDK_CHECKSUM=$2; shift 2; ;;
+    -j|--jvm)      JDK_JVM=$2; shift 2; ;;
+    -v|--version)  JDK_VERSION_STRING=$2; shift 2; ;;
+    -p|--parse)    PARSE_ONLY="true"; shift;;
+    *) echo "Unknown option $1 !"; exit 1;;
+  esac
+done
+
+JDK_VERSION_STRING=${JDK_VERSION_STRING:-$1}
+
+prepareUrl()
+{
+  # HotSpot
+  # JDK  8 Linux = https://github.com/AdoptOpenJDK/openjdk8-binaries/releases/download/jdk8u275-b01/OpenJDK8U-jdk_x64_linux_hotspot_8u275b01.tar.gz
+  # JDK 11 Linux = https://github.com/AdoptOpenJDK/openjdk11-binaries/releases/download/jdk-11.0.9.1%2B1/OpenJDK11U-jdk_x64_linux_hotspot_11.0.9.1_1.tar.gz
+  # JDK 15 Linux = https://github.com/AdoptOpenJDK/openjdk15-binaries/releases/download/jdk-15.0.1%2B9/OpenJDK15U-jdk_x64_linux_hotspot_15.0.1_9.tar.gz
+
+  # using -E since it's more universal / portable than -r
+  JDK_VERSION=`echo "$JDK_VERSION_STRING" | sed -E 's/^(jdk(-)?)?(.+)$/\3/'`
+  JDK_MAJOR_VERSION=`echo $JDK_VERSION | sed -E 's/^([0-9]+)(u|.)(.+)/\1/'`
+
+  JDK_DW_URL="https://github.com/AdoptOpenJDK/openjdk${JDK_MAJOR_VERSION}-binaries/releases/download/"
+  JDK_PATH_VERSION="jdk"
+  if [[ $JDK_MAJOR_VERSION -gt 8 ]]; then
+    JDK_PATH_VERSION+=-`echo $JDK_VERSION | sed -E 's/\+/\%2B/g'`
+    FILENAME_VERSION=`echo $JDK_VERSION | sed -E 's/(\%2B9|\+)/_/g'`
+  else
+    JDK_PATH_VERSION+=$JDK_VERSION;
+    FILENAME_VERSION=`echo $JDK_VERSION | sed -E 's/-b/b/g'`
+  fi
+  JDK_DW_FILENAME="OpenJDK${JDK_MAJOR_VERSION}U-jdk_${JDK_ARCH}_${JDK_OS}_${JDK_JVM}_${FILENAME_VERSION}.tar.gz"
+
+  [[ -z $JAVA_HOME ]] && JAVA_HOME="/java/adoptopenjdk-$JDK_VERSION"
+
+  JDK_DW_URL+="$JDK_PATH_VERSION/"
+  JDK_DW_URL+="$JDK_DW_FILENAME"
+
+  printf "Configuration: \n\n"
+  printf "JAVA_HOME\t\t= %s\n" $JAVA_HOME
+  printf "JDK_VERSION\t\t= %s\n" $JDK_VERSION
+  printf "JDK_MAJOR_VERSION\t= %s\n" $JDK_MAJOR_VERSION
+  printf "JDK_OS\t\t\t= %s\n" $JDK_OS
+  printf "JDK_ARCH\t\t= %s\n" $JDK_ARCH
+  printf "JDK_JVM\t\t\t= %s\n" $JDK_JVM
+  printf "JDK_DW_URL\t\t= %s\n" $JDK_DW_URL
+  printf "JDK_DW_FILENAME\t\t= %s\n" $JDK_DW_FILENAME
+  printf "JDK_CHECKSUM\t\t= %s\n\n" $JDK_CHECKSUM
+
+  # validate
+  [[ -z $JDK_VERSION ]] && echo "Could not find JDK_VERSION in $JDK_VERSION_STRING!" && exit 1;
+  [[ -z $JDK_MAJOR_VERSION ]] && echo "Could not find JDK_MAJOR_VERSION in $JDK_VERSION_STRING!" && exit 1;
+
+  # exit, if parting only - useful for debugging.
+  [[ "$PARSE_ONLY" == "true" ]] && echo "Parse only mode. Exiting." && exit 0;
+}
+
+prepareUrl
+
+printf "\nDownloading...\n"
+
 set -euxo pipefail
 
-# The environment variables are set in the jdk file.
-# If you need to debug - just copy them here.
+export | grep -E '(JAVA_.+|JDK_.+|GLIBC_.+|PATH)='
 
 # Creating JDK home
 mkdir -p ${JAVA_HOME}
 ln -s ${JAVA_HOME} /java/jdk
+
+# Creating /etc/profile.d/autojdk paths for distributions which support it.
+mkdir -p /usr/java/
+ln -s ${JAVA_HOME} /usr/java/latest
 
 # Downloading & Installing
 cd ${JAVA_HOME}
 # https://ec.haxx.se/usingcurl/usingcurl-timeouts
 # speed-limit is in bytes.
 curl --fail --speed-time 15 --speed-limit 1024000 -o $JDK_DW_FILENAME -J -L "${JDK_DW_URL}"
-echo "${JDK_CHECKSUM} ${JDK_DW_FILENAME}" | sha256sum -c -
-7z l ${JDK_DW_FILENAME}
-7z x -y -snl ${JDK_DW_FILENAME}
+
+# Two spaces between checksum and file name - https://github.com/gliderlabs/docker-alpine/issues/174
+echo "${JDK_CHECKSUM}  ${JDK_DW_FILENAME}" | sha256sum -c -
+tar --strip-components 1 -xzf ${JDK_DW_FILENAME}
 
 # Fixing directory structure
-mv ${JAVA_HOME}/${JDK_DW_DIR_NAME}/* ${JAVA_HOME}
 ls -al ${JAVA_HOME}/
 ls -al ${JAVA_HOME}/bin/*
-rm -rfv "$JAVA_HOME/$JDK_DW_DIR_NAME"* \
-        "$JAVA_HOME/man" \
+rm -rfv "$JAVA_HOME/man" \
         "$JAVA_HOME/"*src.zip \
         "$JAVA_HOME/lib/missioncontrol" \
         "$JAVA_HOME/lib/visualvm" \
@@ -45,6 +130,13 @@ rm -rfv "$JAVA_HOME/$JDK_DW_DIR_NAME"* \
         "$JAVA_HOME/jre/lib/amd64/"libjavafx*.so \
         "$JAVA_HOME/jre/lib/amd64/"libjfx*.so
 
+# this is necessary for VMs, since docker images already have the proper env vars pre-defined.
+echo "Setup /etc/profile.d/java.sh"
+printf "export JAVA_HOME=$JAVA_HOME \nexport PATH=\$JAVA_HOME/bin:\$PATH\n" > /etc/profile.d/java.sh
+chmod 644 /etc/profile.d/java.sh
+rm -rfv "/java/${JDK_DW_FILENAME}"
+. /etc/profile.d/java.sh
+
 # Testing JDK installation.
 echo "Test jdk symlink..." > /dev/null;
 if [[ ! -f "/java/jdk/bin/java" ]]; then
@@ -57,14 +149,3 @@ java -version
 
 echo "Testing javac installation..." > /dev/null;
 javac -version
-
-echo "Installing jmeter" > /dev/null
-cd /java
-curl --fail --speed-time 15 --speed-limit 1024000 -O -J -L "http://apache.cbox.biz/jmeter/binaries/apache-jmeter-${JMETER_VERSION}.tgz"
-echo "${JMETER_CHECKSUM} apache-jmeter-${JMETER_VERSION}.tgz" | sha512sum -c -
-tar zxf apache-jmeter-${JMETER_VERSION}.tgz
-ln -s /java/apache-jmeter-${JMETER_VERSION}/bin/{jmeter,jmeter-server} /usr/local/bin/
-rm -rfv "/java/apache-jmeter-${JMETER_VERSION}/"*docs*
-echo "Testing jmeter installation..." > /dev/null;
-jmeter --version
-rm -rf apache-jmeter-${JMETER_VERSION}.tgz

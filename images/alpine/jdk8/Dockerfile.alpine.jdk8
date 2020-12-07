@@ -1,20 +1,11 @@
 ARG SNAPSHOT=""
 FROM strongboxci/alpine:base$SNAPSHOT
 
-ENV JDK_VERSION=8 \
-    JDK_UPDATE=252 \
-    JDK_BUILD=09 \
-    JDK_CHECKSUM=b51cd51b61d0695e6811e2121a0e38b95a72efba593b4836d9b1810a48a872af \
+ENV JDK_VERSION_STRING=jdk8u275-b01 \
+    JDK_CHECKSUM=06fb04075ed503013beb12ab87963b2ca36abe9e397a0c298a57c1d822467c29 \
     GLIBC_VERSION=2.31-r0
 
-ENV JDK_NAME="jdk-${JDK_VERSION}u${JDK_UPDATE}" \
-    JDK_DW_PATH="jdk${JDK_VERSION}u${JDK_UPDATE}-b${JDK_BUILD}" \
-    JDK_DW_FILENAME="jdk-${JDK_VERSION}u${JDK_UPDATE}-ojdkbuild-linux-x64.zip"
-ENV JDK_DW_DIR_NAME="${JDK_NAME}-ojdkbuild-linux-x64" \
-    JDK_DIR_NAME="${JDK_NAME}-b${JDK_BUILD}" \
-    JDK_DW_URL="https://github.com/ojdkbuild/contrib_jdk8u-ci/releases/download/${JDK_DW_PATH}/${JDK_DW_FILENAME}"
-
-ENV JAVA_HOME="/java/${JDK_DIR_NAME}"
+ENV JAVA_HOME="/java/${JDK_VERSION_STRING}"
 ENV PATH="${JAVA_HOME}/bin:${PATH}"
 
 ENV JMETER_VERSION=5.3 \
@@ -28,9 +19,10 @@ COPY common-scripts /scripts
 
 USER root
 
-RUN set -x \
+RUN set -ex \
  && apk add --no-cache /tmp/glibc-$GLIBC_VERSION.apk /tmp/glibc-bin-$GLIBC_VERSION.apk \
  && /scripts/setup-jdk.sh \
+ && /scripts/setup-jmeter.sh \
  && rm -rf /tmp/* /scripts
 
 USER jenkins

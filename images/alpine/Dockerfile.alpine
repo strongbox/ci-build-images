@@ -21,16 +21,18 @@ ENV HOME /home/jenkins
 ## libstdc++ is necessary because some java tools don't work if it's missing.
 ##
 
-ENV BASE_TOOLS bash bc ca-certificates curl coreutils file grep gnupg mc openssh-client openssh-keygen procps p7zip sed tar unzip wget xz jq
+ENV BASE_TOOLS bash bc ca-certificates curl coreutils file grep gnupg mc openssh-client openssh-keygen outils-sha256 outils-sha512 procps p7zip sed tar unzip wget xz jq
 ENV VCS_TOOLS git
 ENV BUILD_DEPS dpkg dpkg-dev rpm rpm-dev
 ENV OTHER_DEPS libstdc++
+
+#libstdc++
 
 COPY common-scripts /scripts
 
 USER root
 
-RUN set -x \
+RUN set -ex \
  && apk add --no-cache $BASE_TOOLS $VCS_TOOLS $BUILD_DEPS $OTHER_TOOLS \
  && apk add --no-cache --virtual build-dependencies shadow \
  && /bin/bash /scripts/setup-user.sh \
