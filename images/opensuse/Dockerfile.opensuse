@@ -5,7 +5,7 @@ ENV GROUP_ID=1000
 # THIS MUST HAPPEN HERE OR ZYPPER SHOWS INSANE ERRORS!
 ENV HOME /home/jenkins
 
-ENV BASE_TOOLS bash bc curl coreutils file gzip grep gnupg mc openssh procps p7zip-full sed tar unzip wget xz jq
+ENV BASE_TOOLS bash bc curl coreutils expect file gzip grep gnupg mc openssh procps p7zip-full sed tar unzip wget xz jq
 ENV VCS_TOOLS git mercurial
 
 COPY common-scripts /scripts

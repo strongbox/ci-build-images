@@ -4,7 +4,7 @@ ENV USER_ID=1000
 ENV GROUP_ID=1000
 ENV HOME /home/jenkins
 
-ENV BASE_TOOLS bash bc curl coreutils-single file grep gnupg mc openssh-clients procps sed p7zip p7zip-plugins tar unzip wget xz jq
+ENV BASE_TOOLS bash bc curl coreutils-single expect file grep gnupg mc openssh-clients procps sed p7zip p7zip-plugins tar unzip wget xz jq
 ENV VCS_TOOLS git mercurial
 
 COPY common-scripts /scripts
