@@ -9,7 +9,6 @@ export | grep -E '(JAVA_.+|MVN_.+|M2_.+|PATH)='
 
 # Creating MDN home
 mkdir -p $M2_HOME
-mkdir -p $HOME/.m2/{lib/ext,repository} $HOME/.mvn
 
 # https://ec.haxx.se/usingcurl/usingcurl-timeouts
 # speed-limit is in bytes.
@@ -21,13 +20,6 @@ echo "${MVN_CHECKSUM}  /tmp/apache-maven-${MVN_VERSION}-bin.tar.gz" | sha512sum 
 # Untar.
 tar --strip-components 1 -C "$M2_HOME" -xzf "/tmp/apache-maven-${MVN_VERSION}-bin.tar.gz"
 ln -s $M2_HOME/bin/* /usr/bin/
-
-# Setup settings.xml
-curl -L -o $HOME/.m2/settings.xml "https://strongbox.github.io/assets/resources/maven/settings.xml"
-
-# Use ":" for better compatibility with other distros (i.e. freebsd) and to avoid issues when username contains `.`
-# https://www.freebsd.org/cgi/man.cgi?query=chown&sektion=8#end
-chown -R $(id -u):$(id -g) $HOME
 
 # Test command.
 echo "Testing mvn $MVN_VERSION installation";

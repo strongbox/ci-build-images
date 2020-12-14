@@ -7,6 +7,9 @@ ENV HOME /home/jenkins
 ENV BASE_TOOLS bash bc ca-certificates curl coreutils expect file grep gnupg jq mc openssh-client procps p7zip-full sed tar unzip wget xz-utils
 ENV VCS_TOOLS git mercurial
 
+# Don't ask questions.
+ENV DEBIAN_FRONTEND noninteractive
+
 COPY common-scripts /scripts
 
 RUN set -ex \

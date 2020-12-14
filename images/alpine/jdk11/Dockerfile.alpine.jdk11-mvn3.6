@@ -10,8 +10,9 @@ COPY common-scripts /scripts
 
 USER root
 
-RUN set -x \
+RUN set -ex \
  && /scripts/setup-mvn.sh \
+ && /scripts/setup-mvn-settings.sh --owner 1000:1000 --user jenkins \
  && rm -rf /tmp/* /scripts
 
 USER jenkins

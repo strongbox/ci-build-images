@@ -4,7 +4,7 @@ FROM strongboxci/ubuntu:jdk11-mvn3.6$SNAPSHOT
 USER root
 
 # NOTE: Sudo is necessary becuase of the auto-installation script which is provided by node.
-RUN set -x \
+RUN set -ex \
  && apt-get -q update \
  && apt-get -y install gnupg2 sudo \
  && curl -sL https://deb.nodesource.com/setup_14.x | bash - \
