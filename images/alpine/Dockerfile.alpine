@@ -38,7 +38,7 @@ RUN set -ex \
  && /bin/bash /scripts/setup-user.sh \
  && apk del build-dependencies \
  && mkdir -p /var/lib/rpm /var/tmp \
- && chown -R ${USER_ID}.${GROUP_ID} /var/lib/rpm /var/tmp \
+ && chown -R ${USER_ID}:${GROUP_ID} /var/lib/rpm /var/tmp \
  && chmod -R 755 /var/lib/rpm /var/tmp \
  && rm -rf /tmp/* /scripts
 

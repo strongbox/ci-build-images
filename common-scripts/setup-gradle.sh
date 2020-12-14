@@ -9,6 +9,6 @@ echo "Downloading https://services.gradle.org/distributions/gradle-${GRADLE_VERS
 curl --fail --speed-time 15 --speed-limit 1024000 -o /tmp/gradle-$GRADLE_VERSION.zip -L "https://services.gradle.org/distributions/gradle-${GRADLE_VERSION}-bin.zip"
 unzip -d /java /tmp/gradle-$GRADLE_VERSION.zip
 ln -s $GRADLE_HOME/bin/* /usr/bin/
-chown ${USER_ID}.${GROUP_ID} $HOME/.gradle $GRADLE_HOME
+chown ${USER_ID}:${GROUP_ID} $HOME/.gradle $GRADLE_HOME
 echo "Testing gradle installation" > /dev/null
 gradle --version

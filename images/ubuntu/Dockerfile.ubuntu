@@ -1,4 +1,4 @@
-FROM ubuntu:19.10
+FROM ubuntu:20.04
 
 ENV USER_ID=1000
 ENV GROUP_ID=1000
@@ -6,6 +6,9 @@ ENV HOME /home/jenkins
 
 ENV BASE_TOOLS bash bc ca-certificates expect curl coreutils file grep gnupg jq mc openssh-client procps p7zip-full sed tar unzip wget xz-utils
 ENV VCS_TOOLS git mercurial
+
+# Don't ask questions.
+ENV DEBIAN_FRONTEND noninteractive
 
 COPY common-scripts /scripts
 

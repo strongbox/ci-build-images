@@ -10,9 +10,9 @@ COPY --from=node:14.11.0-alpine /opt /opt
 
 USER root
 
-RUN set -x \
- && mkdir -p $HOME/.config \
- && chown -R $USER_ID.$GROUP_ID $HOME/.config \
+RUN set -ex \
+ && mkdir -p $HOME/.config $HOME/.npm \
+ && chown -R $USER_ID:$GROUP_ID $HOME/.config $HOME/.npm \
  && apk add --no-cache libstdc++ \
  && (set -o errexit -o nounset; echo "Testing mvn installation" > /dev/null; mvn -version) \
  && (set -o errexit -o nounset; echo "Testing node installation" > /dev/null; node --version) \

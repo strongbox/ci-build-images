@@ -9,6 +9,8 @@ TAG_SNAPSHOT=""
 TIMESTAMP=${TIMESTAMP:-`date +"%y%m%d%H%M%S"`}
 GET_IMAGE=""
 
+FORCE_PODMAN=""
+
 getDistribution() {
   echo $1 | awk -F[=.] '{print $2}'
 }
@@ -58,25 +60,28 @@ build() {
   DISTRIBUTION=$(getDistribution "$FILENAME")
   TAG=$(getTag "$FILENAME" "$DISTRIBUTION")
   IMAGE=$(getImage "$DISTRIBUTION" "$TAG")
+  DOCKER_VERSION=$(docker -v)
+  PODMAN_VERSION=$(podman -v 2> /dev/null)
 
-  DOCKER_BUILD_ARGS=""
-  [[ ! -z "$TAG_SNAPSHOT" ]] && DOCKER_BUILD_ARGS=" --build-arg SNAPSHOT=-$TAG_SNAPSHOT"
+  BUILD_CMD="docker"
+  BUILD_ARGS=""
+  [[ ! -z "$TAG_SNAPSHOT" ]] && BUILD_ARGS=" --build-arg SNAPSHOT=-$TAG_SNAPSHOT"
 
-  echo "Distribution: $DISTRIBUTION"
-  echo "Tag: $TAG"
-  echo "Image: $IMAGE"
-  echo ""
+  [[ ! -z "$FORCE_PODMAN" ]] && BUILD_CMD="podman"
 
-  (set -euxo pipefail; docker build -f "$DOCKER_FILE" -t "$IMAGE" $DOCKER_BUILD_ARGS $BUILD_WITH_NO_CACHE_ARG $CURRENT_DIR | tee "$DOCKER_FILE.build.log") || {
+  printf "Distribution:\t %s\n" $DISTRIBUTION
+  printf "Tag:\t\t %s\n" $TAG
+  printf "Image:\t\t %s\n" $IMAGE
+  printf "Docker:\t\t %s\n" "$DOCKER_VERSION"
+  printf "Podman:\t\t %s\n\n" "$PODMAN_VERSION"
+
+  (set -euxo pipefail; $BUILD_CMD build -f "$DOCKER_FILE" -t "$IMAGE" $BUILD_ARGS $BUILD_WITH_NO_CACHE_ARG $CURRENT_DIR | tee "$DOCKER_FILE.build.log") || {
     echo "fail: $IMAGE" >> $MAIN_BUILD_LOG
     echo "Done" >> $MAIN_BUILD_LOG
     exit 1
   }
 
-  echo ""
-  echo "To test the image use: "
-  echo "docker run -it --rm $IMAGE"
-  echo ""
+  printf "\nTo test the image use: \n\n%s run -it --rm %s \n\n" "$BUILD_CMD" "$IMAGE"
 
   echo "success: $IMAGE" >> $MAIN_BUILD_LOG
 }
@@ -95,6 +100,7 @@ usage() {
     -h |--help          Prints this help message.
     -c |--clear         Clears all temp/log files from the repository.
     -nc|--no-cache      Adds --no-cache to the docker build command
+    --podman            Force build with podman (experimental)
     -s |--snapshot      Tag the images as snapshots (i.e. strongboxci/alpine:base-TIMESTAMP||PR-123||BRANCH)
     -gi|--get-image     Prints the full image and tag (i.e. strongboxci/alpine:base-TIMESTAMP||PR-123||BRANCH; needed for CI)
 
@@ -110,14 +116,9 @@ clearLogs() {
 while [[ $# -gt 0 ]]; do
     key="$1"
     case $key in
-        -c|--clear|--clean)
-            clearLogs
-            exit 0
-        ;;
-        -nc|--no-cache)
-            BUILD_WITH_NO_CACHE_ARG=" --no-cache "
-            shift 1
-        ;;
+        -c|--clear|--clean) clearLogs; exit 0; ;;
+        -nc|--no-cache) BUILD_WITH_NO_CACHE_ARG=" --no-cache "; shift 1; ;;
+        --podman) FORCE_PODMAN="true"; shift 1; ;;
         -s|--snapshot)
             # Jenkins PR/Branch env
             if [[ ! -z "$CHANGE_ID" ]]; then
@@ -129,19 +130,9 @@ while [[ $# -gt 0 ]]; do
             fi
             shift
         ;;
-        --get-image)
-            GET_IMAGE=true
-            shift
-        ;;
-        -h|--help)
-            usage
-            exit 0
-        ;;
-        *)
-            BUILD_PATH=$1
-            shift
-            break
-        ;;
+        --get-image) GET_IMAGE=true; shift; ;;
+        -h|--help) usage; exit 0; ;;
+        *) BUILD_PATH=$1; shift; break; ;;
     esac
 done
 
