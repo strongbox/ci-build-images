@@ -99,7 +99,7 @@ ln -s ${JAVA_HOME} /usr/java/latest
 cd ${JAVA_HOME}
 # https://ec.haxx.se/usingcurl/usingcurl-timeouts
 # speed-limit is in bytes.
-curl --fail --speed-time 15 --speed-limit 1024000 -o $JDK_DW_FILENAME -J -L "${JDK_DW_URL}"
+curl --fail --speed-time 15 --speed-limit 512000 -o $JDK_DW_FILENAME -J -L "${JDK_DW_URL}"
 
 # Two spaces between checksum and file name - https://github.com/gliderlabs/docker-alpine/issues/174
 echo "${JDK_CHECKSUM}  ${JDK_DW_FILENAME}" | sha256sum -c -

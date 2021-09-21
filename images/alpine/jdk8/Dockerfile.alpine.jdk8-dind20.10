@@ -1,0 +1,122 @@
+ARG SNAPSHOT=""
+FROM strongboxci/alpine:jdk8$SNAPSHOT
+
+USER root
+
+# Commons
+ENV DOCKER_COMPOSE_VERSION=1.29.2
+ENV K8S_CLI=1.22.0
+
+# Install kubectl
+ADD https://storage.googleapis.com/kubernetes-release/release/v$K8S_CLI/bin/linux/amd64/kubectl /bin/kubectl
+
+# Install docker-compose
+ADD https://github.com/docker/compose/releases/download/$DOCKER_COMPOSE_VERSION/docker-compose-Linux-x86_64 /bin/docker-compose
+
+RUN set -eux; chmod +x /bin/docker-compose /bin/kubectl
+# /Commons
+
+#
+# How does this work?
+# 1. We copy the binaries from the original Docker inside Docker rootless image
+# 2. We make sure the necessary apk dependencies are installed
+# 3. It just works.
+#
+
+# Copy Docker 20.10 binaries (accumulated from all 3 images)
+## This build file is based on the official Docker 20.10 dind-rootless docker file
+## https://github.com/docker-library/docker/blob/83e4de3bc2aac346e2f76129b1a3a556c1e1bb95/20.10/Dockerfile
+## https://github.com/docker-library/docker/blob/83e4de3bc2aac346e2f76129b1a3a556c1e1bb95/20.10/dind/Dockerfile
+## https://github.com/docker-library/docker/blob/83e4de3bc2aac346e2f76129b1a3a556c1e1bb95/20.10/dind-rootless/Dockerfile
+COPY --from=docker:20.10-dind-rootless /usr/local/bin/* /usr/local/bin/
+#COPY --from=docker:20.10-dind-rootless /usr/local/bin/containerd /usr/local/bin/
+#COPY --from=docker:20.10-dind-rootless /usr/local/bin/containerd-shim /usr/local/bin/
+#COPY --from=docker:20.10-dind-rootless /usr/local/bin/containerd-shim-runc-v2 /usr/local/bin/
+#COPY --from=docker:20.10-dind-rootless /usr/local/bin/ctr /usr/local/bin/
+#COPY --from=docker:20.10-dind-rootless /usr/local/bin/dind /usr/local/bin/
+#COPY --from=docker:20.10-dind-rootless /usr/local/bin/docker /usr/local/bin/
+#COPY --from=docker:20.10-dind-rootless /usr/local/bin/docker-entrypoint.sh /usr/local/bin/
+#COPY --from=docker:20.10-dind-rootless /usr/local/bin/docker-init /usr/local/bin/
+#COPY --from=docker:20.10-dind-rootless /usr/local/bin/docker-proxy /usr/local/bin/
+#COPY --from=docker:20.10-dind-rootless /usr/local/bin/dockerd /usr/local/bin/
+#COPY --from=docker:20.10-dind-rootless /usr/local/bin/dockerd-entrypoint.sh /usr/local/bin/
+#COPY --from=docker:20.10-dind-rootless /usr/local/bin/modprobe /usr/local/bin/
+#COPY --from=docker:20.10-dind-rootless /usr/local/bin/rootlesskit /usr/local/bin/
+#COPY --from=docker:20.10-dind-rootless /usr/local/bin/rootlesskit-docker-proxy /usr/local/bin/
+#COPY --from=docker:20.10-dind-rootless /usr/local/bin/runc /usr/local/bin/
+#COPY --from=docker:20.10-dind-rootless /usr/local/bin/vpnkit /usr/local/bin/
+
+## 20.10/Dockerfile
+# https://github.com/docker-library/docker/pull/166
+#   dockerd-entrypoint.sh uses DOCKER_TLS_CERTDIR for auto-generating TLS certificates
+#   docker-entrypoint.sh uses DOCKER_TLS_CERTDIR for auto-setting DOCKER_TLS_VERIFY and DOCKER_CERT_PATH
+# (For this to work, at least the "client" subdirectory of this path needs to be shared between the client and server containers via a volume, "docker cp", or other means of data sharing.)
+ENV DOCKER_TLS_CERTDIR=/certs
+# also, ensure the directory pre-exists and has wide enough permissions for "dockerd-entrypoint.sh" to create subdirectories, even when run in "rootless" mode
+RUN mkdir /certs /certs/client && chmod 1777 /certs /certs/client
+# (doing both /certs and /certs/client so that if Docker does a "copy-up" into a volume defined on /certs/client, it will "do the right thing" by default in a way that still works for rootless users)
+## /20.10/Dockerfile
+
+## 20.10/dind/Dockerfile
+# https://github.com/docker/docker/blob/master/project/PACKAGERS.md#runtime-dependencies
+RUN set -eux; \
+	apk add --no-cache \
+		btrfs-progs \
+		e2fsprogs \
+		e2fsprogs-extra \
+		ip6tables \
+		iptables \
+		openssl \
+        shadow \
+		shadow-uidmap \
+		xfsprogs \
+		xz \
+# pigz: https://github.com/moby/moby/pull/35697 (faster gzip implementation)
+		pigz \
+	; \
+# only install zfs if it's available for the current architecture
+# https://git.alpinelinux.org/cgit/aports/tree/main/zfs/APKBUILD?h=3.6-stable#n9 ("all !armhf !ppc64le" as of 2017-11-01)
+# "apk info XYZ" exits with a zero exit code but no output when the package exists but not for this arch
+	if zfs="$(apk info --no-cache --quiet zfs)" && [ -n "$zfs" ]; then \
+		apk add --no-cache zfs; \
+	fi
+
+# set up subuid/subgid so that "--userns-remap=default" works out-of-the-box
+RUN set -eux; \
+	addgroup -S dockremap; \
+	adduser -S -G dockremap dockremap; \
+	echo 'dockremap:165536:65536' >> /etc/subuid; \
+	echo 'dockremap:165536:65536' >> /etc/subgid
+
+# https://github.com/docker/docker/tree/master/hack/dind (leaving env var; binary is copied from the docker image)
+ENV DIND_COMMIT 42b1175eda071c0e9121e1d64345928384a93df1
+
+VOLUME /var/lib/docker
+
+EXPOSE 2375 2376
+## /20.10/dind/Dockerfile
+
+## 20.10/dind-rootless/Dockerfile
+RUN mkdir /run/user && chmod 1777 /run/user
+RUN set -eux; \
+	echo 'jenkins:100000:65536' >> /etc/subuid; \
+	echo 'jenkins:100000:65536' >> /etc/subgid
+
+# pre-create "/var/lib/docker" for our rootless user
+RUN set -eux; \
+	mkdir -p /home/jenkins/.local/share/docker; \
+	chown -R jenkins:jenkins /home/jenkins/.local/share/docker
+
+## Test
+
+RUN set -eux; \
+    rootlesskit --version;  \
+    vpnkit --version
+
+VOLUME /home/jenkins/.local/share/docker
+
+ENTRYPOINT ["dockerd-entrypoint.sh"]
+
+CMD []
+
+USER jenkins

@@ -8,7 +8,7 @@ ENV HOME /home/jenkins
 ## Details regarding packages: ##
 #################################
 ##
-## dpkg/rpm packages are necessaryfor strongbox-distribution builds to work.
+## dpkg/rpm packages are necessary for strongbox-distribution builds to work.
 ##
 ## p7zip is necessary to unzip jdk-8u202-ojdkbuild-linux-x64 jdk-8u202-ojdkbuild-linux-x64, because apparently
 ## unzip is unable to create symbolic links:
@@ -20,13 +20,13 @@ ENV HOME /home/jenkins
 ##
 ## libstdc++ is necessary because some java tools don't work if it's missing.
 ##
+## iproute2 -- busybox' "ip" is insufficient for docker dind (and our network-tools image)
+##   [rootlesskit:child ] error: executing [[ip tuntap add name tap0 mode tap] [ip link set tap0 address 02:50:00:00:00:01]]: exit status 1
 
-ENV BASE_TOOLS bash bc ca-certificates curl coreutils expect file grep gnupg mc openssh-client openssh-keygen outils-sha256 outils-sha512 procps p7zip sed tar unzip wget xz jq
+ENV BASE_TOOLS bash bc ca-certificates curl coreutils expect file grep gnupg iproute2 mc openssh-client openssh-keygen outils-sha256 outils-sha512 procps p7zip sed tar unzip wget xz jq
 ENV VCS_TOOLS git
 ENV BUILD_DEPS dpkg dpkg-dev rpm rpm-dev
 ENV OTHER_DEPS libstdc++
-
-#libstdc++
 
 COPY common-scripts /scripts
 
