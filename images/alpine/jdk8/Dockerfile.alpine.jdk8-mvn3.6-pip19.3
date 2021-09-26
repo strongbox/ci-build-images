@@ -14,13 +14,17 @@ RUN set -ex \
 ENV PYTHON_PIP_VERSION 19.3.1
 
 # We are using cryptography < 3.4 for pyp == 19.3 or it will fail to install.
+# Also, we need to do python -m pip uninstall -y pip before using `get-pip` or it will fail as well.
+# https://stackoverflow.com/a/60362963/393805
 RUN set -ex; \
     \
     mkdir -p $HOME/.cache/pip; \
     chown -R $USER_ID.$GROUP_ID $HOME; \
     chmod -R 755 $HOME; \
+    python -m pip uninstall -y pip; \
+    rm -rf /usr/lib/python/3.7/site-packages/{pip,pip-*}; \
     curl -o get-pip.py -L "https://bootstrap.pypa.io/get-pip.py"; \
-    python get-pip.py --disable-pip-version-check --no-cache-dir "pip==$PYTHON_PIP_VERSION" "cryptography < 3.4"; \
+    python get-pip.py --disable-pip-version-check --no-cache-dir "pip==$PYTHON_PIP_VERSION" "cryptography < 3.4" "setuptools < 50.0" "wheel < 1.0"; \
     pip --version; \
     \
     find /usr/local -depth \
@@ -31,19 +35,17 @@ RUN set -ex; \
 	\) -exec rm -rf '{}' +; \
     rm -f get-pip.py; \
     mkdir -p `dirname $(pip --version | cut -f 4 -d " ")`; \
-    chown -R $USER_ID.$GROUP_ID $(dirname $(pip --version | cut -f 4 -d " "))
-
-RUN set -ex \
- && pip install twine \
- && echo "Testing python installation" > /dev/null \
- && python --version \
- && python3 --version \
- && echo "Testing pip installation" > /dev/null \
- && pip --version \
- && echo "Test twine installation" > /dev/null \
- && twine --version \
- && apk del twine-deps \
- && rm -rf /tmp/*
+    chown -R $USER_ID.$GROUP_ID $(dirname $(pip --version | cut -f 4 -d " ")); \
+    pip install twine; \
+    echo "Testing python installation" > /dev/null; \
+    python --version; \
+    python3 --version; \
+    echo "Testing pip installation" > /dev/null; \
+    pip --version; \
+    echo "Test twine installation" > /dev/null; \
+    twine --version; \
+    apk del twine-deps; \
+    rm -rf /tmp/*
 
 USER jenkins
 
