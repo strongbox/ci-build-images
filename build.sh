@@ -132,41 +132,46 @@ while [[ $# -gt 0 ]]; do
         ;;
         --get-image) GET_IMAGE=true; shift; ;;
         -h|--help) usage; exit 0; ;;
-        *) BUILD_PATH=$1; shift; break; ;;
+    *) POSITIONAL+=("$1"); shift;;
     esac
 done
 
-if [[ ! -z $BUILD_PATH ]]; then
-  # Clear main build log before starting.
-  if [[ -z "$GET_IMAGE" ]]; then
-    truncate -s 0 $MAIN_BUILD_LOG
-  fi
+set -- "${POSITIONAL[@]}" # restore positional parameters
 
-  # build all Dockerfiles in a directory
-  if [[ -d $BUILD_PATH ]]; then
-    for dockerFile in $(find $BUILD_PATH -type f -name "*Dockerfile*" ! -name "*.log" ! -name "*.bkp*" | sort | xargs); do
+# Make it possible to pass multiple Dockerfile paths (either directories or files)
+for BUILD_PATH in "$@"; do
+  if [[ ! -z $BUILD_PATH ]]; then
+    # Clear main build log before starting.
+    if [[ -z "$GET_IMAGE" ]]; then
+      truncate -s 0 $MAIN_BUILD_LOG
+    fi
+
+    # build all Dockerfiles in a directory
+    if [[ -d $BUILD_PATH ]]; then
+      for dockerFile in $(find $BUILD_PATH -type f -name "*Dockerfile*" ! -name "*.log" ! -name "*.bkp*" | sort | xargs); do
+        if [[ -z "$GET_IMAGE" ]]; then
+          build "$dockerFile"
+        else
+          getImageFromFile "$dockerFile"
+        fi
+      done
       if [[ -z "$GET_IMAGE" ]]; then
-        build "$dockerFile"
-      else
-        getImageFromFile "$dockerFile"
+        echo "Done" >> $MAIN_BUILD_LOG
       fi
-    done
-    if [[ -z "$GET_IMAGE" ]]; then
-      echo "Done" >> $MAIN_BUILD_LOG
-    fi
-  # build a specific Dockerfile
-  elif [[ -f $BUILD_PATH ]]; then
-    if [[ -z "$GET_IMAGE" ]]; then
-      build "$BUILD_PATH"
-      echo "Done" >> $MAIN_BUILD_LOG
+    # build a specific Dockerfile
+    elif [[ -f $BUILD_PATH ]]; then
+      if [[ -z "$GET_IMAGE" ]]; then
+        build "$BUILD_PATH"
+        echo "Done" >> $MAIN_BUILD_LOG
+      else
+        getImageFromFile "$BUILD_PATH"
+      fi
+    # what just happened?
     else
-      getImageFromFile "$BUILD_PATH"
+      echo "$BUILD_PATH neither a file nor a directory. Exiting."
+      exit 1
     fi
-  # what just happened?
-  else
-    echo "$BUILD_PATH neither a file nor a directory. Exiting."
-    exit 1
   fi
-fi
 
-[[ ! -z "$GET_IMAGE" ]] || echo ""
+  [[ ! -z "$GET_IMAGE" ]] || echo ""
+done
