@@ -126,6 +126,14 @@ def distributionBuildStages(DISTRIBUTION, BRANCH_NAME, DEPLOY, SNAPSHOT, BUILD_J
                                 }
                             }
                         }
+                        stage('jdk17') {
+                            container("docker") {
+                                script {
+                                    def built = processDockerfiles(findDockerfiles((String) "./images/$DISTRIBUTION/jdk17"), SNAPSHOT);
+                                    IMAGES = IMAGES + built
+                                }
+                            }
+                        }
                     }
                     stage('publish') {
                         if(BRANCH_NAME != "master" && DEPLOY != true) {

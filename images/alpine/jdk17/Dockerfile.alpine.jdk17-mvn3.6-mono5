@@ -1,0 +1,36 @@
+ARG SNAPSHOT=""
+FROM strongboxci/alpine:jdk11-mvn3.6$SNAPSHOT
+
+#
+#  ███╗   ███╗ █████╗  ██████╗ ██╗ ██████╗
+#  ████╗ ████║██╔══██╗██╔════╝ ██║██╔════╝
+#  ██╔████╔██║███████║██║  ███╗██║██║
+#  ██║╚██╔╝██║██╔══██║██║   ██║██║██║
+#  ██║ ╚═╝ ██║██║  ██║╚██████╔╝██║╚██████╗
+#  ╚═╝     ╚═╝╚═╝  ╚═╝ ╚═════╝ ╚═╝ ╚═════╝
+#
+
+# NOTE:
+#  @sbespalov has confirmed things should be working with mono 5.2.*.
+#  However, we used to have opensuse with 4.6.1 installed and things also were working so that version could also be used as a "backup".
+
+COPY --from=mono:5.20 /usr/bin/mono /usr/bin/mono
+COPY --from=mono:5.20 /usr/lib/mono/ /usr/lib/mono/
+COPY --from=mono:5.20 /usr/lib/libMono* /usr/lib/
+COPY --from=mono:5.20 /usr/include/mono-2.0 /usr/include/mono-2.0
+COPY --from=mono:5.20 /etc/mono /etc/mono
+COPY --from=mono:5.20 /usr/share/mono /usr/share/mono
+COPY --from=mono:5.20 /usr/share/mono-2.0 /usr/share/mono-2.0
+COPY --from=mono:5.20 /usr/share/binfmts/cli /usr/share/binfmts/cli
+
+COPY common-scripts /scripts
+
+USER root
+
+RUN set -ex \
+ && /bin/bash /scripts/setup-mono.sh \
+ && rm -rf /tmp/* /scripts
+
+USER jenkins
+
+CMD echo "" && mono --version && echo "" && mvn --version  && echo "" && /bin/bash
