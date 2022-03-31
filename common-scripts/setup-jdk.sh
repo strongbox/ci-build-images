@@ -4,7 +4,7 @@
 # i.e. jdk8u275-b01 || jdk-11.0.9.1+1 || etc
 JDK_VERSION_STRING=${JDK_VERSION_STRING:-""}
 # i.e. /java/jdk8u275-b01 || /java/jdk-11.0.9.1+1 || etc
-JAVA_HOME=${JAVA_HOME:-""}
+JAVA_HOME=${JAVA_HOME:-"/java/jdk"}
 # available at https://adoptopenjdk.net/releases.html?variant=openjdk8&jvmVariant=hotspot
 JDK_CHECKSUM=${JDK_CHECKSUM:-""}
 
@@ -21,7 +21,7 @@ PARSE_ONLY="false"
 
 while [[ $# -gt 0 ]]; do
   case $1 in
-    --home)        JAVA_HOME=$2; shift 2; ;;
+    -i|--install)  INSTALL_HOME=$2; shift 2; ;;
     -a|--arch)     JDK_ARCH=$2; shift 2; ;;
     -c|--checksum) JDK_CHECKSUM=$2; shift 2; ;;
     -j|--jvm)      JDK_JVM=$2; shift 2; ;;
@@ -39,28 +39,40 @@ prepareUrl()
   # JDK  8 Linux = https://github.com/AdoptOpenJDK/openjdk8-binaries/releases/download/jdk8u275-b01/OpenJDK8U-jdk_x64_linux_hotspot_8u275b01.tar.gz
   # JDK 11 Linux = https://github.com/AdoptOpenJDK/openjdk11-binaries/releases/download/jdk-11.0.9.1%2B1/OpenJDK11U-jdk_x64_linux_hotspot_11.0.9.1_1.tar.gz
   # JDK 15 Linux = https://github.com/AdoptOpenJDK/openjdk15-binaries/releases/download/jdk-15.0.1%2B9/OpenJDK15U-jdk_x64_linux_hotspot_15.0.1_9.tar.gz
+  # JDK 17 Linux = https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.2%2B8/OpenJDK17U-jdk_x64_linux_hotspot_17.0.2_8.tar.gz
 
   # using -E since it's more universal / portable than -r
   JDK_VERSION=`echo "$JDK_VERSION_STRING" | sed -E 's/^(jdk(-)?)?(.+)$/\3/'`
   JDK_MAJOR_VERSION=`echo $JDK_VERSION | sed -E 's/^([0-9]+)(u|.)(.+)/\1/'`
 
-  JDK_DW_URL="https://github.com/AdoptOpenJDK/openjdk${JDK_MAJOR_VERSION}-binaries/releases/download/"
   JDK_PATH_VERSION="jdk"
   if [[ $JDK_MAJOR_VERSION -gt 8 ]]; then
     JDK_PATH_VERSION+=-`echo $JDK_VERSION | sed -E 's/\+/\%2B/g'`
     FILENAME_VERSION=`echo $JDK_VERSION | sed -E 's/(\%2B9|\+)/_/g'`
+    if [[ $JDK_MAJOR_VERSION -le 15 ]]; then
+      JDK_DW_URL="https://github.com/AdoptOpenJDK/openjdk${JDK_MAJOR_VERSION}-binaries/releases/download/"
+    else
+      JDK_DW_URL="https://github.com/adoptium/temurin${JDK_MAJOR_VERSION}-binaries/releases/download/"
+    fi
   else
     JDK_PATH_VERSION+=$JDK_VERSION;
     FILENAME_VERSION=`echo $JDK_VERSION | sed -E 's/-b/b/g'`
+    JDK_DW_URL="https://github.com/AdoptOpenJDK/openjdk${JDK_MAJOR_VERSION}-binaries/releases/download/"
   fi
+
   JDK_DW_FILENAME="OpenJDK${JDK_MAJOR_VERSION}U-jdk_${JDK_ARCH}_${JDK_OS}_${JDK_JVM}_${FILENAME_VERSION}.tar.gz"
 
-  [[ -z $JAVA_HOME ]] && JAVA_HOME="/java/adoptopenjdk-$JDK_VERSION"
+  if [[ -z $INSTALL_HOME && $JDK_MAJOR_VERSION -le 15 ]]; then
+   INSTALL_HOME="/java/adoptopenjdk-$JDK_VERSION";
+  else
+   INSTALL_HOME="/java/temurin-$JDK_VERSION";
+  fi
 
   JDK_DW_URL+="$JDK_PATH_VERSION/"
   JDK_DW_URL+="$JDK_DW_FILENAME"
 
   printf "Configuration: \n\n"
+  printf "INSTALL_HOME\t\t= %s\n" $INSTALL_HOME
   printf "JAVA_HOME\t\t= %s\n" $JAVA_HOME
   printf "JDK_VERSION\t\t= %s\n" $JDK_VERSION
   printf "JDK_MAJOR_VERSION\t= %s\n" $JDK_MAJOR_VERSION
@@ -88,15 +100,15 @@ set -euxo pipefail
 export | grep -E '(JAVA_.+|JDK_.+|GLIBC_.+|PATH)='
 
 # Creating JDK home
-mkdir -p ${JAVA_HOME}
-ln -s ${JAVA_HOME} /java/jdk
+mkdir -p ${INSTALL_HOME}
+ln -s ${INSTALL_HOME} /java/jdk
 
 # Creating /etc/profile.d/autojdk paths for distributions which support it.
 mkdir -p /usr/java/
-ln -s ${JAVA_HOME} /usr/java/latest
+ln -s ${INSTALL_HOME} /usr/java/latest
 
 # Downloading & Installing
-cd ${JAVA_HOME}
+cd ${INSTALL_HOME}
 # https://ec.haxx.se/usingcurl/usingcurl-timeouts
 # speed-limit is in bytes.
 curl --fail --speed-time 15 --speed-limit 512000 -o $JDK_DW_FILENAME -J -L "${JDK_DW_URL}"
@@ -106,33 +118,33 @@ echo "${JDK_CHECKSUM}  ${JDK_DW_FILENAME}" | sha256sum -c -
 tar --strip-components 1 -xzf ${JDK_DW_FILENAME}
 
 # Fixing directory structure
-ls -al ${JAVA_HOME}/
-ls -al ${JAVA_HOME}/bin/*
-rm -rfv "$JAVA_HOME/man" \
-        "$JAVA_HOME/"*src.zip \
-        "$JAVA_HOME/lib/missioncontrol" \
-        "$JAVA_HOME/lib/visualvm" \
-        "$JAVA_HOME/lib/"*javafx* \
-        "$JAVA_HOME/jre/lib/plugin.jar" \
-        "$JAVA_HOME/jre/lib/ext/jfxrt.jar" \
-        "$JAVA_HOME/jre/bin/javaws" \
-        "$JAVA_HOME/jre/lib/javaws.jar" \
-        "$JAVA_HOME/jre/lib/desktop" \
-        "$JAVA_HOME/jre/plugin" \
-        "$JAVA_HOME/jre/lib/"deploy* \
-        "$JAVA_HOME/jre/lib/"*javafx* \
-        "$JAVA_HOME/jre/lib/"*jfx* \
-        "$JAVA_HOME/jre/lib/amd64/libdecora_sse.so" \
-        "$JAVA_HOME/jre/lib/amd64/"libprism_*.so \
-        "$JAVA_HOME/jre/lib/amd64/libfxplugins.so" \
-        "$JAVA_HOME/jre/lib/amd64/libglass.so" \
-        "$JAVA_HOME/jre/lib/amd64/libgstreamer-lite.so" \
-        "$JAVA_HOME/jre/lib/amd64/"libjavafx*.so \
-        "$JAVA_HOME/jre/lib/amd64/"libjfx*.so
+ls -al ${INSTALL_HOME}/
+ls -al ${INSTALL_HOME}/bin/*
+rm -rfv "$INSTALL_HOME/man" \
+        "$INSTALL_HOME/"*src.zip \
+        "$INSTALL_HOME/lib/missioncontrol" \
+        "$INSTALL_HOME/lib/visualvm" \
+        "$INSTALL_HOME/lib/"*javafx* \
+        "$INSTALL_HOME/jre/lib/plugin.jar" \
+        "$INSTALL_HOME/jre/lib/ext/jfxrt.jar" \
+        "$INSTALL_HOME/jre/bin/javaws" \
+        "$INSTALL_HOME/jre/lib/javaws.jar" \
+        "$INSTALL_HOME/jre/lib/desktop" \
+        "$INSTALL_HOME/jre/plugin" \
+        "$INSTALL_HOME/jre/lib/"deploy* \
+        "$INSTALL_HOME/jre/lib/"*javafx* \
+        "$INSTALL_HOME/jre/lib/"*jfx* \
+        "$INSTALL_HOME/jre/lib/amd64/libdecora_sse.so" \
+        "$INSTALL_HOME/jre/lib/amd64/"libprism_*.so \
+        "$INSTALL_HOME/jre/lib/amd64/libfxplugins.so" \
+        "$INSTALL_HOME/jre/lib/amd64/libglass.so" \
+        "$INSTALL_HOME/jre/lib/amd64/libgstreamer-lite.so" \
+        "$INSTALL_HOME/jre/lib/amd64/"libjavafx*.so \
+        "$INSTALL_HOME/jre/lib/amd64/"libjfx*.so
 
 # this is necessary for VMs, since docker images already have the proper env vars pre-defined.
 echo "Setup /etc/profile.d/java.sh"
-printf "export JAVA_HOME=$JAVA_HOME \nexport PATH=\$JAVA_HOME/bin:\$PATH\n" > /etc/profile.d/java.sh
+printf "export JAVA_HOME=/java/jdk \nexport PATH=\$JAVA_HOME/bin:\$PATH\n" > /etc/profile.d/java.sh
 chmod 644 /etc/profile.d/java.sh
 rm -rfv "/java/${JDK_DW_FILENAME}"
 . /etc/profile.d/java.sh

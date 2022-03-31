@@ -1,0 +1,18 @@
+ARG SNAPSHOT=""
+FROM strongboxci/alpine:jdk8-mvn3.6$SNAPSHOT
+
+ENV GRADLE_VERSION=7.4.1
+ENV GRADLE_HOME="/java/gradle-${GRADLE_VERSION}"
+
+COPY common-scripts /scripts
+
+USER root
+
+RUN set -ex \
+ && /bin/bash /scripts/setup-gradle.sh \
+ && rm -rf /tmp/* /scripts
+
+USER jenkins
+
+CMD echo "" && gradle --version && echo "" && /bin/bash
+

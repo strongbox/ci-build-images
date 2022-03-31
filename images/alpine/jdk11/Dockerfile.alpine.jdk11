@@ -5,15 +5,18 @@ ENV JDK_VERSION_STRING=jdk-11.0.9.1+1 \
     JDK_CHECKSUM=e388fd7f3f2503856d0b04fde6e151cbaa91a1df3bcebf1deddfc3729d677ca3 \
     GLIBC_VERSION=2.32-r0
 
-ENV JAVA_HOME="/java/${JDK_VERSION_STRING}"
+ENV JAVA_HOME="/java/jdk"
 ENV PATH $JAVA_HOME/bin:$PATH
 
-ENV JMETER_VERSION=5.3 \
-    JMETER_CHECKSUM=922195b901358c2bf0d454e4b19fa2b45f072f0e0327b06c229935c2de0b785b641e7a58ceaa4682cf3643aeed4915256ae003b487b0c9a2144bb33c2b12e28e
+ENV JMETER_VERSION=5.4.3 \
+    JMETER_CHECKSUM=e88802cc0dfcd6a2c8554911ae4574d7cfafcc8c6be6ade810b4677b7351831b0680d81cf2b0fb5bb4b9b3cf437528a044d7da74214a1bee351b273dbb53e439
 
 ADD https://alpine-pkgs.sgerrand.com/sgerrand.rsa.pub /etc/apk/keys/sgerrand.rsa.pub
 ADD https://github.com/sgerrand/alpine-pkg-glibc/releases/download/$GLIBC_VERSION/glibc-$GLIBC_VERSION.apk /tmp/glibc-$GLIBC_VERSION.apk
 ADD https://github.com/sgerrand/alpine-pkg-glibc/releases/download/$GLIBC_VERSION/glibc-bin-$GLIBC_VERSION.apk /tmp/glibc-bin-$GLIBC_VERSION.apk
+
+# Fix for SIGSEGV error - sgerrand/alpine-pkg-glibc#75
+ADD https://archive.archlinux.org/packages/z/zlib/zlib-1%3A1.2.11-4-x86_64.pkg.tar.xz /tmp/libz.tar.xz
 
 COPY common-scripts /scripts
 
@@ -22,7 +25,6 @@ USER root
 RUN set -ex \
  && apk add --no-cache /tmp/glibc-$GLIBC_VERSION.apk /tmp/glibc-bin-$GLIBC_VERSION.apk \
  # Start fix for SIGSEGV error - sgerrand/alpine-pkg-glibc#75
- && curl -o /tmp/libz.tar.xz -L "https://www.archlinux.org/packages/core/x86_64/zlib/download" \
  && mkdir -p /tmp/libz \
  && tar -xf /tmp/libz.tar.xz -C /tmp/libz \
  && cp /tmp/libz/usr/lib/libz.so.1.2.11 /usr/glibc-compat/lib \

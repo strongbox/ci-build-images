@@ -1,0 +1,30 @@
+FROM mono:5.20 as builder
+
+ENV CHOCO_VERSION=ec79e66b18ba3997a31f4c16546820f0ea5d7ef1
+
+COPY common-scripts /scripts
+
+RUN set -ex \
+ && echo "Building chocolatey..." \
+ && /bin/bash /scripts/setup-choco.sh build
+
+ARG SNAPSHOT=""
+FROM strongboxci/alpine:jdk11-mvn3.6-mono5-nuget3.4$SNAPSHOT
+
+ENV ChocolateyInstall=/opt/chocolatey
+
+COPY common-scripts /scripts
+COPY --from=builder /usr/src/choco/build_output/chocolatey $ChocolateyInstall
+# see https://github.com/mono/mono/issues/12557
+COPY --from=builder /usr/lib/libmono-native.so /usr/lib/libmono-native.so
+
+USER root
+
+RUN set -ex \
+ && echo "Setting up chocolatey..." \
+ && /bin/bash /scripts/setup-choco.sh setupScript \
+ && rm -rf /tmp/* /scripts
+
+USER jenkins
+
+CMD echo "" && mono --version && echo "" && echo -n "Choco: " && choco --version && echo "" && mvn --version && echo "" && /bin/bash

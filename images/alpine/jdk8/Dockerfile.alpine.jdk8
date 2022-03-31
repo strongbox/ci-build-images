@@ -3,13 +3,13 @@ FROM strongboxci/alpine:base$SNAPSHOT
 
 ENV JDK_VERSION_STRING=jdk8u275-b01 \
     JDK_CHECKSUM=06fb04075ed503013beb12ab87963b2ca36abe9e397a0c298a57c1d822467c29 \
-    GLIBC_VERSION=2.31-r0
+    GLIBC_VERSION=2.32-r0
 
-ENV JAVA_HOME="/java/${JDK_VERSION_STRING}"
+ENV JAVA_HOME="/java/jdk"
 ENV PATH="${JAVA_HOME}/bin:${PATH}"
 
-ENV JMETER_VERSION=5.3 \
-    JMETER_CHECKSUM=922195b901358c2bf0d454e4b19fa2b45f072f0e0327b06c229935c2de0b785b641e7a58ceaa4682cf3643aeed4915256ae003b487b0c9a2144bb33c2b12e28e
+ENV JMETER_VERSION=5.4.3 \
+    JMETER_CHECKSUM=e88802cc0dfcd6a2c8554911ae4574d7cfafcc8c6be6ade810b4677b7351831b0680d81cf2b0fb5bb4b9b3cf437528a044d7da74214a1bee351b273dbb53e439
 
 ADD https://alpine-pkgs.sgerrand.com/sgerrand.rsa.pub /etc/apk/keys/sgerrand.rsa.pub
 ADD https://github.com/sgerrand/alpine-pkg-glibc/releases/download/$GLIBC_VERSION/glibc-$GLIBC_VERSION.apk /tmp/glibc-$GLIBC_VERSION.apk

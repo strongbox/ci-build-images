@@ -1,8 +1,9 @@
 ARG SNAPSHOT=""
-FROM strongboxci/debian:base$SNAPSHOT
+FROM strongboxci/alpine:base$SNAPSHOT
 
-ENV JDK_VERSION_STRING=jdk8u275-b01 \
-    JDK_CHECKSUM=06fb04075ed503013beb12ab87963b2ca36abe9e397a0c298a57c1d822467c29
+ENV JDK_VERSION_STRING=jdk-17.0.2+8 \
+    JDK_CHECKSUM=a07cc09db0e71d06ea388902f8fcea8151b2b9ba51a16f75f9c0a3ac9acbfb61 \
+    JDK_OS=alpine-linux
 
 ENV JAVA_HOME="/java/jdk"
 ENV PATH $JAVA_HOME/bin:$PATH
