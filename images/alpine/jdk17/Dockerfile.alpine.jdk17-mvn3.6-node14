@@ -1,6 +1,6 @@
 # https://github.com/nodejs/docker-node/blob/f8c22aeb318ec3df876f8271b9b8a86005f0f53d/10/alpine/Dockerfile
 ARG SNAPSHOT=""
-FROM strongboxci/alpine:jdk11-mvn3.6$SNAPSHOT
+FROM strongboxci/alpine:jdk17-mvn3.6$SNAPSHOT
 
 ENV NODE_VERSION 14.11.0
 ENV YARN_VERSION 1.19.1
