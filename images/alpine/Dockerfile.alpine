@@ -1,4 +1,4 @@
-FROM alpine:3.10
+FROM alpine:3.16
 
 ENV USER_ID=1000
 ENV GROUP_ID=1000
@@ -18,7 +18,7 @@ ENV HOME /home/jenkins
 ##        jdk-8u202-ojdkbuild-linux-x64/jre/lib/amd64/server/libjsig.so -> ../libjsig.so
 ##     lchmod (file attributes) error: Not supported
 ##
-## libstdc++ is necessary because some java tools don't work if it's missing.
+## libstdc++ or gcompat are necessary because some java and gcc compiled tools don't work if it's missing
 ##
 ## iproute2 -- busybox' "ip" is insufficient for docker dind (and our network-tools image)
 ##   [rootlesskit:child ] error: executing [[ip tuntap add name tap0 mode tap] [ip link set tap0 address 02:50:00:00:00:01]]: exit status 1
@@ -26,14 +26,14 @@ ENV HOME /home/jenkins
 ENV BASE_TOOLS bash bc ca-certificates curl coreutils expect file grep gnupg iproute2 mc openssh-client openssh-keygen outils-sha256 outils-sha512 procps p7zip sed tar unzip wget xz jq
 ENV VCS_TOOLS git
 ENV BUILD_DEPS dpkg dpkg-dev rpm rpm-dev
-ENV OTHER_DEPS libstdc++
+#ENV OTHER_DEPS libstdc++
 
 COPY common-scripts /scripts
 
 USER root
 
 RUN set -ex \
- && apk add --no-cache $BASE_TOOLS $VCS_TOOLS $BUILD_DEPS $OTHER_TOOLS \
+ && apk add --no-cache $BASE_TOOLS $VCS_TOOLS $BUILD_DEPS \
  && apk add --no-cache --virtual build-dependencies shadow \
  && /bin/bash /scripts/setup-user.sh \
  && apk del build-dependencies \
@@ -47,3 +47,5 @@ WORKDIR /home/jenkins
 USER jenkins
 
 CMD echo "" && cat /etc/os-release && echo "" && /bin/bash
+
+CMD printf '--- Image details ---\n%s \n------------------\n' "$(cat /etc/os-release)" && /bin/bash

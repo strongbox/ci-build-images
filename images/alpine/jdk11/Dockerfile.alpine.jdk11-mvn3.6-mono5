@@ -33,4 +33,4 @@ RUN set -ex \
 
 USER jenkins
 
-CMD echo "" && mono --version && echo "" && mvn --version  && echo "" && /bin/bash
+CMD printf '--- Image details ---\n%s \n%s \n------------------\n' "$(mvn --version)" "$(mono --version)" && /bin/bash

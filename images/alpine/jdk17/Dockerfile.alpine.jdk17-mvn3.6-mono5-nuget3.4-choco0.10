@@ -28,3 +28,5 @@ RUN set -ex \
 USER jenkins
 
 CMD echo "" && mono --version && echo "" && echo -n "Choco: " && choco --version && echo "" && mvn --version && echo "" && /bin/bash
+
+CMD printf '--- Image details ---\n%s \n%s \n%s \n%s \n------------------\n' "$(mvn --version)" "$(mono $NUGET_PATH | head -n 1)" "$(choco --version)" "$(mono --version)" && /bin/bash
