@@ -8,6 +8,7 @@ TAG_SNAPSHOT=""
 # So that we can pass the timestamp from the CI
 TIMESTAMP=${TIMESTAMP:-`date +"%y%m%d%H%M%S"`}
 GET_IMAGE=""
+PUBLISH=false
 
 FORCE_PODMAN=""
 
@@ -103,6 +104,7 @@ usage() {
     --podman            Force build with podman (experimental)
     -s |--snapshot      Tag the images as snapshots (i.e. strongboxci/alpine:base-TIMESTAMP||PR-123||BRANCH)
     -gi|--get-image     Prints the full image and tag (i.e. strongboxci/alpine:base-TIMESTAMP||PR-123||BRANCH; needed for CI)
+    --publish           Publishes the images
 
 EOF
     exit 0
@@ -116,9 +118,10 @@ clearLogs() {
 while [[ $# -gt 0 ]]; do
     key="$1"
     case $key in
-        -c|--clear|--clean) clearLogs; exit 0; ;;
+        -c|--clear|--clean) clearLogs; shift 1 ;;
         -nc|--no-cache) BUILD_WITH_NO_CACHE_ARG=" --no-cache "; shift 1; ;;
-        --podman) FORCE_PODMAN="true"; shift 1; ;;
+        --podman) FORCE_PODMAN="true"; shift 1 ;;
+        --publish) PUBLISH=true; shift 1 ;;
         -s|--snapshot)
             # Jenkins PR/Branch env
             if [[ ! -z "$CHANGE_ID" ]]; then
@@ -175,3 +178,32 @@ for BUILD_PATH in "$@"; do
 
   [[ ! -z "$GET_IMAGE" ]] || echo ""
 done
+
+if [[ $PUBLISH == "true" ]]; then
+  echo "Publishing images..."
+
+  unset $IMAGE
+  for BUILD_PATH in "$@"; do
+    if [[ ! -z $BUILD_PATH ]]; then
+      # build all Dockerfiles in a directory
+      if [[ -d $BUILD_PATH ]]; then
+        for dockerFile in $(find $BUILD_PATH -type f -name "*Dockerfile*" ! -name "*.log" ! -name "*.bkp*" | sort | xargs); do
+          IMG=`getImageFromFile "$dockerFile"`
+          echo "Publishing image: $IMG"
+          docker push $IMG
+        done
+      # build a specific Dockerfile
+      elif [[ -f $BUILD_PATH ]]; then
+        IMG=`getImageFromFile "$BUILD_PATH"`
+        echo "Publishing image: $IMG"
+        docker push $IMAGE
+      # what just happened?
+      else
+        echo "$BUILD_PATH neither a file nor a directory. Exiting."
+        exit 1
+      fi
+    fi
+    printf "\n\n"
+  done
+
+fi
