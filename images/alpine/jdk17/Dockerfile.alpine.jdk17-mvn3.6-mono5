@@ -28,9 +28,10 @@ COPY common-scripts /scripts
 USER root
 
 RUN set -ex \
+ && apk add --no-cache gcompat \
  && /bin/bash /scripts/setup-mono.sh \
  && rm -rf /tmp/* /scripts
 
 USER jenkins
 
-CMD echo "" && mono --version && echo "" && mvn --version  && echo "" && /bin/bash
+CMD printf '--- Image details ---\n%s \n%s \n------------------\n' "$(mvn --version)" "$(mono --version)" && /bin/bash

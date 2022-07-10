@@ -21,7 +21,6 @@ RUN set -ex; \
     mkdir -p $HOME/.cache/pip; \
     chown -R $USER_ID.$GROUP_ID $HOME; \
     chmod -R 755 $HOME; \
-    python -m pip uninstall -y pip; \
     rm -rf /usr/lib/python/3.7/site-packages/{pip,pip-*}; \
     curl -o get-pip.py -L "https://bootstrap.pypa.io/get-pip.py"; \
     python get-pip.py --disable-pip-version-check --no-cache-dir "pip==$PYTHON_PIP_VERSION" "cryptography < 3.4" "setuptools < 50.0" "wheel < 1.0"; \
@@ -35,7 +34,7 @@ RUN set -ex; \
 	\) -exec rm -rf '{}' +; \
     rm -f get-pip.py; \
     mkdir -p `dirname $(pip --version | cut -f 4 -d " ")`; \
-    chown -R $USER_ID.$GROUP_ID $(dirname $(pip --version | cut -f 4 -d " ")); \
+    chown -R $USER_ID:$GROUP_ID $(dirname $(pip --version | cut -f 4 -d " ")); \
     pip install twine; \
     echo "Testing python installation" > /dev/null; \
     python --version; \
@@ -49,4 +48,4 @@ RUN set -ex; \
 
 USER jenkins
 
-CMD printf '--- Image info ---\n%s \n%s \n%s\n------------------\n' "+ $(python3 --version | xargs)" "+ $(pip --version | xargs)" "+ $(twine --version | xargs)" && /bin/bash
+CMD printf '--- Image details ---\n%s \n%s \n%s\n------------------\n' "+ $(python3 --version | xargs)" "+ $(pip --version | xargs)" "+ $(twine --version | xargs)" && /bin/bash

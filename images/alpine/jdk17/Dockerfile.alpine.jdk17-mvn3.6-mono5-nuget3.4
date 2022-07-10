@@ -21,4 +21,4 @@ RUN set -x \
 
 USER jenkins
 
-CMD echo "" && mono --version && mono $NUGET_PATH | head -n 1 && echo "" && echo "" && mvn --version && echo "" && /bin/bash
+CMD printf '--- Image details ---\n%s \n%s \n%s \n------------------\n' "$(mvn --version)" "$(mono $NUGET_PATH | head -n 1)" "$(mono --version)" && /bin/bash
