@@ -9,6 +9,8 @@ TAG_SNAPSHOT=""
 TIMESTAMP=${TIMESTAMP:-`date +"%y%m%d%H%M%S"`}
 GET_IMAGE=""
 PUBLISH=false
+GLOBAL_DNS=$(cat /etc/resolv.conf | grep -iE "^nameserver" | awk '{print $2}' | xargs)
+DNS=""
 
 FORCE_PODMAN=""
 
@@ -74,7 +76,8 @@ build() {
   printf "Tag:\t\t %s\n" $TAG
   printf "Image:\t\t %s\n" $IMAGE
   printf "Docker:\t\t %s\n" "$DOCKER_VERSION"
-  printf "Podman:\t\t %s\n\n" "$PODMAN_VERSION"
+  printf "Podman:\t\t %s\n" "$PODMAN_VERSION"
+  printf "DNS: \t\t %s\n\n" "$DNS"
 
   (set -euxo pipefail; $BUILD_CMD build -f "$DOCKER_FILE" -t "$IMAGE" $BUILD_ARGS $BUILD_WITH_NO_CACHE_ARG $CURRENT_DIR | tee "$DOCKER_FILE.build.log") || {
     echo "fail: $IMAGE" >> $MAIN_BUILD_LOG
@@ -134,12 +137,26 @@ while [[ $# -gt 0 ]]; do
             shift
         ;;
         --get-image) GET_IMAGE=true; shift; ;;
+        --dns)
+            if [[ ${2::1} != "-" ]]; then
+              DNS="$DNS $2"; shift 2;
+            else
+              DNS="$GLOBAL_DNS"; shift 1;
+            fi
+            ;;
         -h|--help) usage; exit 0; ;;
     *) POSITIONAL+=("$1"); shift;;
     esac
 done
 
 set -- "${POSITIONAL[@]}" # restore positional parameters
+
+if [[ -z $DNS ]]; then
+  DNS="$GLOBAL_DNS"
+fi
+
+#DNS=$(echo $DNS | sed -E 's/([^ ]+)([ ]*)/ --dns \1/g' | awk '{$1=$1};1')
+#DNS=$(echo "--build-arg DNS=$DNS")
 
 # Make it possible to pass multiple Dockerfile paths (either directories or files)
 for BUILD_PATH in "$@"; do

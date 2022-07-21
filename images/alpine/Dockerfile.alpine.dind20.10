@@ -28,23 +28,23 @@ RUN set -eux; chmod +x /bin/docker-compose /bin/kubectl
 ## https://github.com/docker-library/docker/blob/83e4de3bc2aac346e2f76129b1a3a556c1e1bb95/20.10/Dockerfile
 ## https://github.com/docker-library/docker/blob/83e4de3bc2aac346e2f76129b1a3a556c1e1bb95/20.10/dind/Dockerfile
 ## https://github.com/docker-library/docker/blob/83e4de3bc2aac346e2f76129b1a3a556c1e1bb95/20.10/dind-rootless/Dockerfile
-COPY --from=docker:20.10-dind-rootless /usr/local/bin/* /usr/local/bin/
-#COPY --from=docker:20.10-dind-rootless /usr/local/bin/containerd /usr/local/bin/
-#COPY --from=docker:20.10-dind-rootless /usr/local/bin/containerd-shim /usr/local/bin/
-#COPY --from=docker:20.10-dind-rootless /usr/local/bin/containerd-shim-runc-v2 /usr/local/bin/
-#COPY --from=docker:20.10-dind-rootless /usr/local/bin/ctr /usr/local/bin/
-#COPY --from=docker:20.10-dind-rootless /usr/local/bin/dind /usr/local/bin/
-#COPY --from=docker:20.10-dind-rootless /usr/local/bin/docker /usr/local/bin/
-#COPY --from=docker:20.10-dind-rootless /usr/local/bin/docker-entrypoint.sh /usr/local/bin/
-#COPY --from=docker:20.10-dind-rootless /usr/local/bin/docker-init /usr/local/bin/
-#COPY --from=docker:20.10-dind-rootless /usr/local/bin/docker-proxy /usr/local/bin/
-#COPY --from=docker:20.10-dind-rootless /usr/local/bin/dockerd /usr/local/bin/
-#COPY --from=docker:20.10-dind-rootless /usr/local/bin/dockerd-entrypoint.sh /usr/local/bin/
-#COPY --from=docker:20.10-dind-rootless /usr/local/bin/modprobe /usr/local/bin/
-#COPY --from=docker:20.10-dind-rootless /usr/local/bin/rootlesskit /usr/local/bin/
-#COPY --from=docker:20.10-dind-rootless /usr/local/bin/rootlesskit-docker-proxy /usr/local/bin/
-#COPY --from=docker:20.10-dind-rootless /usr/local/bin/runc /usr/local/bin/
-#COPY --from=docker:20.10-dind-rootless /usr/local/bin/vpnkit /usr/local/bin/
+COPY --from=docker:20.10.17-dind-alpine3.16 /usr/local/bin/* /usr/local/bin/
+#COPY --from=docker:20.10.17-dind-alpine3.16 /usr/local/bin/containerd /usr/local/bin/
+#COPY --from=docker:20.10.17-dind-alpine3.16 /usr/local/bin/containerd-shim /usr/local/bin/
+#COPY --from=docker:20.10.17-dind-alpine3.16 /usr/local/bin/containerd-shim-runc-v2 /usr/local/bin/
+#COPY --from=docker:20.10.17-dind-alpine3.16 /usr/local/bin/ctr /usr/local/bin/
+#COPY --from=docker:20.10.17-dind-alpine3.16 /usr/local/bin/dind /usr/local/bin/
+#COPY --from=docker:20.10.17-dind-alpine3.16 /usr/local/bin/docker /usr/local/bin/
+#COPY --from=docker:20.10.17-dind-alpine3.16 /usr/local/bin/docker-entrypoint.sh /usr/local/bin/
+#COPY --from=docker:20.10.17-dind-alpine3.16 /usr/local/bin/docker-init /usr/local/bin/
+#COPY --from=docker:20.10.17-dind-alpine3.16 /usr/local/bin/docker-proxy /usr/local/bin/
+#COPY --from=docker:20.10.17-dind-alpine3.16 /usr/local/bin/dockerd /usr/local/bin/
+#COPY --from=docker:20.10.17-dind-alpine3.16 /usr/local/bin/dockerd-entrypoint.sh /usr/local/bin/
+#COPY --from=docker:20.10.17-dind-alpine3.16 /usr/local/bin/modprobe /usr/local/bin/
+#COPY --from=docker:20.10.17-dind-alpine3.16 /usr/local/bin/rootlesskit /usr/local/bin/
+#COPY --from=docker:20.10.17-dind-alpine3.16 /usr/local/bin/rootlesskit-docker-proxy /usr/local/bin/
+#COPY --from=docker:20.10.17-dind-alpine3.16 /usr/local/bin/runc /usr/local/bin/
+#COPY --from=docker:20.10.17-dind-alpine3.16 /usr/local/bin/vpnkit /usr/local/bin/
 
 ## 20.10/Dockerfile
 # https://github.com/docker-library/docker/pull/166
@@ -91,6 +91,10 @@ RUN set -eux; \
 # https://github.com/docker/docker/tree/master/hack/dind (leaving env var; binary is copied from the docker image)
 ENV DIND_COMMIT 42b1175eda071c0e9121e1d64345928384a93df1
 
+RUN set -eux; \
+	wget -O /usr/local/bin/dind "https://raw.githubusercontent.com/docker/docker/${DIND_COMMIT}/hack/dind"; \
+	chmod +x /usr/local/bin/dind
+
 VOLUME /var/lib/docker
 
 EXPOSE 2375 2376
@@ -107,11 +111,42 @@ RUN set -eux; \
 	mkdir -p /home/jenkins/.local/share/docker; \
 	chown -R jenkins:jenkins /home/jenkins/.local/share/docker
 
+RUN set -eux; \
+	\
+	apkArch="$(apk --print-arch)"; \
+	case "$apkArch" in \
+		'x86_64') \
+			url='https://download.docker.com/linux/static/stable/x86_64/docker-rootless-extras-20.10.17.tgz'; \
+			;; \
+		'aarch64') \
+			url='https://download.docker.com/linux/static/stable/aarch64/docker-rootless-extras-20.10.17.tgz'; \
+			;; \
+		*) echo >&2 "error: unsupported architecture ($apkArch)"; exit 1 ;; \
+	esac; \
+	\
+	wget -O rootless.tgz "$url"; \
+	\
+	tar --extract \
+		--file rootless.tgz \
+		--strip-components 1 \
+		--directory /usr/local/bin/ \
+		'docker-rootless-extras/rootlesskit' \
+		'docker-rootless-extras/rootlesskit-docker-proxy' \
+		'docker-rootless-extras/vpnkit' \
+	; \
+	rm rootless.tgz;
+
 ## Test
 
 RUN set -eux; \
     rootlesskit --version;  \
-    vpnkit --version
+    vpnkit --version;
+
+ENV DOCKER_HOST=unix:///run/user/1000/docker.sock
+
+RUN set -eux; \
+    docker --version; \
+    rm -rf /run/user/1000/docker.sock
 
 VOLUME /home/jenkins/.local/share/docker
 
