@@ -198,6 +198,15 @@ def processDockerfiles(files, snapshot)
 
                 def IMAGE_TAG = sh(label: "Getting image tag", script: "/bin/bash ./build.sh ${BUILD_ARGS} --get-image $it", returnStdout: true)
 
+                sh label: "DNS",
+                   script: "cat /etc/resolv.conf"
+
+                sh label: "Patching build",
+                   script: "sed -i '/USER root/a RUN set -ex; cat /etc/resolv.conf; echo nameserver 10.43.0.10 > /etc/resolv.conf;' $it"
+
+                sh label: "Patched version:",
+                   script: "cat $it"
+
                 sh label: "Building $IMAGE_TAG",
                    script: "/bin/bash ./build.sh --no-cache ${BUILD_ARGS} $it"
 
